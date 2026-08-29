@@ -6,9 +6,11 @@ import HistoryList from '@/components/HistoryList';
 import { LanguageProvider, useT } from '@/components/LanguageProvider';
 import Logo from '@/components/Logo';
 import MyChallenges from '@/components/MyChallenges';
+import { useEffect } from 'react';
 import { historyStats } from '@/lib/history';
 import { useGameStore } from '@/lib/gameStore';
 import { useHydratedStore } from '@/lib/useHydratedStore';
+import { useMyChallenges } from '@/lib/useMyChallenges';
 
 export default function HistoryPage() {
   const hydrated = useHydratedStore();
@@ -23,8 +25,17 @@ export default function HistoryPage() {
 
 function History({ hydrated }: { hydrated: boolean }) {
   const t = useT();
-  const { history, clearHistory } = useGameStore();
+  const { history, clearHistory, markChallengesSeen } = useGameStore();
+  const challenges = useMyChallenges(hydrated);
   const stats = historyStats(hydrated ? history : []);
+
+  // Mirar el historial es haberlos visto: el aviso del inicio se apaga aqui.
+  useEffect(() => {
+    if (challenges.length === 0) return;
+    markChallengesSeen(
+      Object.fromEntries(challenges.map((challenge) => [challenge.code, challenge.tried])),
+    );
+  }, [challenges, markChallengesSeen]);
 
   return (
     <main className="flex flex-1 flex-col gap-5 py-5 safe-bottom">
@@ -60,7 +71,7 @@ function History({ hydrated }: { hydrated: boolean }) {
         </motion.ul>
       )}
 
-      <MyChallenges hydrated={hydrated} />
+      <MyChallenges challenges={challenges} />
 
       <section className="flex flex-col gap-2">
         <p className="label px-1">{t.yourGames}</p>

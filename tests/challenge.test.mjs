@@ -13,6 +13,7 @@ const {
   summarizeChallenge,
   parseCodes,
   MAX_OWN_CHALLENGES,
+  newAttempts,
 } = await import('../lib/challenge.ts');
 const { applyGuess, LIVES_BY_DIFFICULTY } = await import('../lib/gameLogic.ts');
 
@@ -123,4 +124,25 @@ test('los codigos de la lista se limpian, deduplican y acotan', () => {
 
   const muchos = Array.from({ length: 40 }, (_, i) => `AB12C${i.toString(36)}`).join(',');
   assert.equal(parseCodes(muchos).length, MAX_OWN_CHALLENGES, 'acotado para no pedir de más');
+});
+
+test('los intentos nuevos son los que no habias visto', () => {
+  const retos = [
+    { code: 'AAA111', wordLength: 5, tried: 3, solved: 1, createdAt: 1 },
+    { code: 'BBB222', wordLength: 7, tried: 2, solved: 2, createdAt: 2 },
+  ];
+
+  assert.equal(newAttempts(retos, {}), 5, 'sin haber mirado nunca, todos son nuevos');
+  assert.equal(newAttempts(retos, { AAA111: 3, BBB222: 2 }), 0, 'vistos todos, ninguno');
+  assert.equal(newAttempts(retos, { AAA111: 1 }), 4, 'dos del primero y los dos del segundo');
+});
+
+test('un contador de vistos desfasado no da negativos', () => {
+  // Puede pasar si un reto caduca y sus resultados desaparecen.
+  const retos = [{ code: 'AAA111', wordLength: 5, tried: 1, solved: 0, createdAt: 1 }];
+  assert.equal(newAttempts(retos, { AAA111: 9 }), 0);
+});
+
+test('sin retos no hay nada nuevo que avisar', () => {
+  assert.equal(newAttempts([], { AAA111: 3 }), 0);
 });
