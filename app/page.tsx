@@ -7,12 +7,14 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { LanguageProvider, useT } from '@/components/LanguageProvider';
 import Logo from '@/components/Logo';
 
+import HistoryStrip from '@/components/HistoryStrip';
 import { ChallengeIcon, GroupIcon, SoloIcon } from '@/components/ModeIcon';
 import OptionsForm from '@/components/OptionsForm';
 import Picker from '@/components/Picker';
 import WordInput from '@/components/WordInput';
 import { useGameStore } from '@/lib/gameStore';
 import { useHydratedStore } from '@/lib/useHydratedStore';
+import { useMyChallenges } from '@/lib/useMyChallenges';
 import { localizeError } from '@/lib/apiError';
 import { normalizeRoomCode } from '@/lib/gameLogic';
 
@@ -34,9 +36,7 @@ export default function HomePage() {
 function Home({ hydrated }: { hydrated: boolean }) {
   const t = useT();
   const router = useRouter();
-  const hasHistory = useGameStore(
-    (state) => state.history.length > 0 || state.myChallenges.length > 0,
-  );
+  const challenges = useMyChallenges(hydrated);
   const { name, language, difficulty, setName, setLanguage, setDifficulty, rememberIdentity } =
     useGameStore();
 
@@ -242,15 +242,8 @@ function Home({ hydrated }: { hydrated: boolean }) {
         )}
       </AnimatePresence>
 
-      {/* Un enlace discreto: el inicio es un lanzador, no un panel. */}
-      {panel === 'menu' && hydrated && hasHistory && (
-        <Link
-          href="/historial"
-          className="mx-auto text-sm text-cream/45 underline-offset-4 hover:text-cream/80 hover:underline"
-        >
-          {t.myHistory}
-        </Link>
-      )}
+      {/* Una tira con tus numeros, no una etiqueta perdida en el pie. */}
+      {panel === 'menu' && hydrated && <HistoryStrip challenges={challenges} />}
 
       <ul className="flex items-center justify-center gap-2 text-[0.7rem] text-cream/30">
         {[t.featureNoInstall, t.featureLanguages, t.featureLevels].map((feature) => (

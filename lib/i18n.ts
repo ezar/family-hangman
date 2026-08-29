@@ -157,6 +157,12 @@ const es = {
   createMyChallenge: 'Crear mi propio reto',
   myChallenges: 'Tus retos',
   myHistory: 'Mi historial',
+  newAttempts: (count: number): string =>
+    count === 1 ? '1 intento nuevo en tus retos' : `${count} intentos nuevos en tus retos`,
+  statsLine: (played: number, won: number, streak: number): string => {
+    const base = `${played} ${played === 1 ? 'jugada' : 'jugadas'} · ${won} ${won === 1 ? 'ganada' : 'ganadas'}`;
+    return streak >= 2 ? `${base} · racha ${streak}` : base;
+  },
   yourGames: 'Tus partidas',
   playedGames: 'Jugadas',
   bestStreak: 'Mejor racha',
@@ -345,6 +351,12 @@ const en: Messages = {
   createMyChallenge: 'Create my own challenge',
   myChallenges: 'Your challenges',
   myHistory: 'My history',
+  newAttempts: (count) =>
+    count === 1 ? '1 new try on your challenges' : `${count} new tries on your challenges`,
+  statsLine: (played, won, streak) => {
+    const base = `${played} played · ${won} won`;
+    return streak >= 2 ? `${base} · streak ${streak}` : base;
+  },
   yourGames: 'Your games',
   playedGames: 'Played',
   bestStreak: 'Best streak',

@@ -28,6 +28,8 @@ interface GameState {
   myChallenges: string[];
   /** Partidas terminadas en este dispositivo, de la mas reciente a la mas vieja. */
   history: HistoryEntry[];
+  /** Intentos que ya habias visto en cada reto tuyo, para avisar de los nuevos. */
+  seenAttempts: Record<string, number>;
   setName: (name: string) => void;
   setLanguage: (language: Language) => void;
   setDifficulty: (difficulty: Difficulty) => void;
@@ -39,6 +41,7 @@ interface GameState {
   forgetChallenges: (codes: string[]) => void;
   recordGame: (entry: HistoryEntry) => void;
   clearHistory: () => void;
+  markChallengesSeen: (counts: Record<string, number>) => void;
   playerIdFor: (roomCode: string) => number | null;
 }
 
@@ -54,6 +57,7 @@ export const useGameStore = create<GameState>()(
       attempts: {},
       myChallenges: [],
       history: [],
+      seenAttempts: {},
       setName: (name) => set({ name }),
       setLanguage: (language) => set({ language }),
       setDifficulty: (difficulty) => set({ difficulty }),
@@ -72,6 +76,8 @@ export const useGameStore = create<GameState>()(
         })),
       recordGame: (entry) => set((state) => ({ history: addEntry(state.history, entry) })),
       clearHistory: () => set({ history: [] }),
+      markChallengesSeen: (counts) =>
+        set((state) => ({ seenAttempts: { ...state.seenAttempts, ...counts } })),
       // Los retos caducan a los siete dias: cuando el servidor ya no los
       // conoce, se quitan de la lista para que no queden enlaces muertos.
       forgetChallenges: (codes) =>

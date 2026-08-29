@@ -49,6 +49,21 @@ export function summarizeChallenge(
   };
 }
 
+/**
+ * Intentos que han entrado en tus retos desde la ultima vez que los miraste.
+ * Es lo que de verdad hace volver: no cuantas partidas llevas, sino que
+ * alguien acaba de picar.
+ */
+export function newAttempts(
+  challenges: ChallengeSummary[],
+  seen: Record<string, number>,
+): number {
+  return challenges.reduce(
+    (total, challenge) => total + Math.max(0, challenge.tried - (seen[challenge.code] ?? 0)),
+    0,
+  );
+}
+
 /** Los codigos que llegan por la URL: separados por comas y acotados. */
 export function parseCodes(input: unknown): string[] {
   if (typeof input !== 'string') return [];

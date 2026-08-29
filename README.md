@@ -151,6 +151,12 @@ retos que juegas. `/historial` las lista, con las cuentas de jugadas, ganadas y
 mejor racha, y arriba los retos que has creado tú, esos con datos vivos del
 servidor (cuántos lo han intentado y cuántos lo sacaron).
 
+Se llega desde una tira en el inicio con tus números, no desde un enlace
+suelto: una etiqueta gris en el pie se confunde con la decoración y no da
+ningún motivo para tocarla. Cuando alguien ha jugado uno de tus retos desde la
+última vez que miraste, la tira lo dice — que es lo que de verdad hace volver,
+más que las estadísticas. Mirar el historial apaga el aviso.
+
 Dos cosas que conviene tener claras:
 
 - **Es de este dispositivo, no de esta persona.** No hay cuentas, así que lo
