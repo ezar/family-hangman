@@ -1,6 +1,8 @@
 export type Language = 'es' | 'en';
 export type Difficulty = 'infantil' | 'familiar' | 'experto';
 export type GameStatus = 'waiting' | 'playing' | 'won' | 'lost';
+/** De donde sale la palabra: del banco, o de un jugador que la escribe. */
+export type WordSource = 'list' | 'player';
 
 export const LANGUAGES: Language[] = ['es', 'en'];
 export const DIFFICULTIES: Difficulty[] = ['infantil', 'familiar', 'experto'];
@@ -8,6 +10,14 @@ export const DIFFICULTIES: Difficulty[] = ['infantil', 'familiar', 'experto'];
 export interface Player {
   id: number;
   name: string;
+}
+
+/** Marcador de la sala, acumulado entre rondas. */
+export interface Scores {
+  wins: number;
+  losses: number;
+  /** Victorias seguidas; se corta al perder. */
+  streak: number;
 }
 
 /** El blob completo que vive en Redis bajo `game:{roomCode}`. */
@@ -19,16 +29,23 @@ export interface Game {
   word: string;
   guessed: string[];
   wrongCount: number;
+  /** Fallos permitidos; depende de la dificultad. */
+  maxWrong: number;
   turnIndex: number;
   players: Player[];
   nextId: number;
+  wordSource: WordSource;
+  /** Quien pone la palabra: no juega turnos ni ve el teclado. */
+  setterId: number | null;
+  /** Comodines gastados en la ronda actual. */
+  hintsUsed: number;
+  scores: Scores;
 }
 
 /**
- * Lo que ve el cliente en el modo grupal: la palabra solo viaja cuando la
- * partida ya ha terminado. Mientras se juega, el cliente recibe unicamente
- * la mascara (letras acertadas y huecos), asi que no puede hacer trampa
- * mirando la respuesta de la API.
+ * Lo que ve el cliente: la palabra solo viaja cuando la partida ya ha
+ * terminado. Mientras se juega solo va la mascara, asi que nadie puede hacer
+ * trampa mirando la respuesta de la API.
  */
 export type PublicGame = Omit<Game, 'word'> & {
   word: string | null;

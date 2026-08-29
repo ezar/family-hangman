@@ -4,16 +4,30 @@ import { readFileSync, readdirSync } from 'node:fs';
 
 // La logica es TypeScript sin tipos en tiempo de ejecucion: la cargamos con el
 // stripper nativo de Node 22 a traves de un import dinamico.
-const { applyGuess, createGame, addPlayer, restartGame, toPublicGame, normalizeRoomCode, generateRoomCode } =
-  await import('../lib/gameLogic.ts');
+const {
+  applyGuess,
+  applyHint,
+  createGame,
+  addPlayer,
+  restartGame,
+  toPublicGame,
+  normalizeRoomCode,
+  generateRoomCode,
+  normalizeCustomWord,
+  partsToDraw,
+  currentPlayer,
+  guessers,
+  LIVES_BY_DIFFICULTY,
+} = await import('../lib/gameLogic.ts');
 
-function playing(word, players = ['A', 'B']) {
+function playing(word, players = ['A', 'B'], options = {}) {
   let game = createGame({
     roomCode: 'TEST',
     language: 'es',
-    difficulty: 'familiar',
+    difficulty: options.difficulty ?? 'familiar',
     word,
     hostName: players[0],
+    wordSource: options.wordSource,
   });
   for (const name of players.slice(1)) {
     game = addPlayer(game, name).game;
@@ -77,8 +91,9 @@ test('se gana al completar la palabra', () => {
   assert.equal(applyGuess(game, 1, 'z').error, 'not-playing');
 });
 
-test('se pierde tras seis fallos y la palabra se revela', () => {
+test('se pierde al agotar las vidas y la palabra se revela', () => {
   let game = playing('sol');
+  assert.equal(game.maxWrong, LIVES_BY_DIFFICULTY.familiar);
   for (const [index, letter] of [...'bcdfgh'].entries()) {
     game = applyGuess(game, (index % 2) + 1, letter).game;
   }
@@ -135,4 +150,112 @@ test('todas las listas de palabras son utilizables', () => {
       );
     }
   }
+});
+
+
+test('cada nivel trae sus propias vidas', () => {
+  assert.equal(playing('gato', ['A', 'B'], { difficulty: 'infantil' }).maxWrong, 8);
+  assert.equal(playing('gato', ['A', 'B'], { difficulty: 'familiar' }).maxWrong, 6);
+  assert.equal(playing('gato', ['A', 'B'], { difficulty: 'experto' }).maxWrong, 5);
+});
+
+test('el dibujo reparte sus seis piezas sobre las vidas que haya', () => {
+  assert.equal(partsToDraw(0, 8), 0);
+  assert.equal(partsToDraw(8, 8), 6, 'la ultima vida completa el muneco');
+  assert.equal(partsToDraw(7, 8) < 6, true, 'antes del final nunca esta completo');
+  for (let wrong = 0; wrong <= 6; wrong += 1) {
+    assert.equal(partsToDraw(wrong, 6), wrong, 'con seis vidas es uno a uno');
+  }
+});
+
+test('el marcador cuenta victorias, derrotas y racha', () => {
+  let game = playing('sol');
+  for (const [index, letter] of [...'sol'].entries()) {
+    game = applyGuess(game, (index % 2) + 1, letter).game;
+  }
+  assert.deepEqual(game.scores, { wins: 1, losses: 0, streak: 1 });
+
+  game = restartGame(game, 'luz');
+  assert.deepEqual(game.scores, { wins: 1, losses: 0, streak: 1 }, 'reiniciar no borra el marcador');
+  for (const [index, letter] of [...'luz'].entries()) {
+    game = applyGuess(game, (index % 2) + 1, letter).game;
+  }
+  assert.deepEqual(game.scores, { wins: 2, losses: 0, streak: 2 });
+
+  game = restartGame(game, 'sol');
+  for (const [index, letter] of [...'bcdfgh'].entries()) {
+    game = applyGuess(game, (index % 2) + 1, letter).game;
+  }
+  assert.deepEqual(game.scores, { wins: 2, losses: 1, streak: 0 }, 'perder corta la racha');
+});
+
+test('la pista revela una letra, cuesta una vida y pasa el turno', () => {
+  const game = playing('gato');
+  const result = applyHint(game, 1, (options) => options[0]);
+  assert.equal(result.ok, true);
+  assert.equal(result.game.guessed.includes(result.letter), true);
+  assert.equal(result.game.wrongCount, 1);
+  assert.equal(result.game.turnIndex, 1);
+  assert.equal(result.game.hintsUsed, 1);
+});
+
+test('solo hay una pista por ronda, y vuelve al reiniciar', () => {
+  const first = applyHint(playing('gato'), 1, (o) => o[0]);
+  assert.deepEqual(applyHint(first.game, 2, (o) => o[0]), { ok: false, error: 'no-hints-left' });
+  assert.equal(restartGame(first.game, 'luna').hintsUsed, 0);
+});
+
+test('la pista no esta disponible con una sola vida', () => {
+  let game = playing('gato');
+  for (const [index, letter] of [...'bcdfh'].entries()) {
+    game = applyGuess(game, (index % 2) + 1, letter).game;
+  }
+  assert.equal(game.wrongCount, 5, 'queda una vida');
+  const turn = currentPlayer(game).id;
+  assert.deepEqual(applyHint(game, turn, (o) => o[0]), { ok: false, error: 'last-life' });
+});
+
+test('la pista respeta el turno', () => {
+  assert.deepEqual(applyHint(playing('gato'), 2, (o) => o[0]), {
+    ok: false,
+    error: 'not-your-turn',
+  });
+});
+
+test('quien pone la palabra no juega turnos', () => {
+  let game = createGame({
+    roomCode: 'TEST',
+    language: 'es',
+    difficulty: 'familiar',
+    word: 'cocodrilo',
+    hostName: 'Padre',
+    wordSource: 'player',
+  });
+  assert.equal(game.setterId, 1);
+  assert.equal(game.status, 'waiting');
+
+  game = addPlayer(game, 'Hijo').game;
+  assert.equal(game.status, 'playing', 'con un solo adivinador ya se puede jugar');
+  assert.deepEqual(guessers(game).map((p) => p.name), ['Hijo']);
+  assert.equal(currentPlayer(game).name, 'Hijo');
+
+  assert.deepEqual(applyGuess(game, 1, 'c'), { ok: false, error: 'not-your-turn' });
+
+  const played = applyGuess(game, 2, 'c');
+  assert.equal(played.ok, true);
+  assert.equal(currentPlayer(played.game).name, 'Hijo', 'con un adivinador el turno no cambia');
+
+  game = addPlayer(played.game, 'Hija').game;
+  const next = applyGuess(game, 2, 'o');
+  assert.equal(currentPlayer(next.game).name, 'Hija', 'ahora si alterna entre los dos');
+});
+
+test('la palabra escrita por un jugador se limpia como las del banco', () => {
+  assert.equal(normalizeCustomWord('  Cocodrilo '), 'cocodrilo');
+  assert.equal(normalizeCustomWord('MONTAÑA'), 'montana');
+  assert.equal(normalizeCustomWord('café'), 'cafe');
+  assert.equal(normalizeCustomWord('ab'), null, 'demasiado corta');
+  assert.equal(normalizeCustomWord('a'.repeat(21)), null, 'demasiado larga');
+  assert.equal(normalizeCustomWord('dos palabras'), null);
+  assert.equal(normalizeCustomWord('perro3'), null);
 });

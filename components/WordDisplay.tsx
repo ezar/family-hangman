@@ -12,14 +12,14 @@ interface Props {
 export default function WordDisplay({ masked, reveal }: Props) {
   // Las palabras largas encogen las fichas para no salirse del movil.
   const size =
-    masked.length > 13
-      ? 'h-11 w-[1.65rem] text-xl'
-      : masked.length > 10
-        ? 'h-12 w-8 text-2xl'
+    masked.length > 12
+      ? 'h-10 w-[1.45rem] text-lg'
+      : masked.length > 8
+        ? 'h-12 w-[1.85rem] text-xl'
         : 'h-14 w-10 text-3xl';
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-1.5" aria-live="polite">
+    <div className="flex flex-wrap items-center justify-center gap-1" aria-live="polite">
       {masked.map((letter, index) => {
         const missed = !letter && reveal ? reveal[index] : null;
         const shown = letter ?? missed;

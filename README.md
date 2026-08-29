@@ -7,7 +7,8 @@ dificultad.
 - **Jugar solo** — un jugador contra la palabra. Sin sala, sin red y sin
   backend: la partida entera vive en el navegador.
 - **Partida grupal** — se crea una sala con código de 4 caracteres, se comparte
-  el enlace y se juega por turnos desde cualquier móvil.
+  el enlace y se juega por turnos desde cualquier móvil. La palabra puede salir
+  del banco o **ponerla un jugador**, que entonces mira sin jugar.
 
 ## Cómo funciona
 
@@ -23,7 +24,13 @@ por igual la API route del modo grupal y el modo solo en el navegador.
 ### Reglas
 
 - El turno pasa al siguiente jugador tras cada intento, acierte o falle.
-- 6 fallos como máximo antes de perder.
+- Las vidas dependen del nivel: 8 en infantil, 6 en familiar y 5 en experto.
+  El dibujo siempre tiene seis piezas y las reparte sobre las vidas que haya.
+- Una **pista** por ronda: revela una letra a cambio de una vida y pasa el
+  turno. No está disponible con una sola vida, para que la ayuda no sea justo
+  lo que acabe con la partida.
+- Quien pone la palabra no juega turnos ni gasta pistas.
+- El **marcador** de la sala (ganadas, perdidas y racha) sobrevive entre rondas.
 - No se puede jugar fuera de turno ni repetir una letra ya probada.
 - La palabra nunca viaja al cliente mientras se juega: la API envía solo la
   máscara (letras acertadas y huecos) y la revela al terminar.
@@ -81,13 +88,14 @@ app/
   page.tsx              elegir modo, crear sala o unirse
   solo/page.tsx         ahorcado de un jugador, sin red
   room/[code]/          tablero de la partida grupal
-  api/                  create · join · state · guess · restart
+  api/                  create · join · state · guess · hint · restart
 components/             tablero, teclado, dibujo, overlays
 lib/
   gameLogic.ts          lógica pura: turnos, victoria y derrota
   redis.ts              cliente de Upstash
   gameStore.ts          estado local del cliente (Zustand)
   useRoom.ts            polling del estado de la sala
+  useFeedback.ts        sonido sintetizado y vibración, sin ficheros de audio
 data/words/             seis listas: {es,en} x {infantil,familiar,experto}
 ```
 
@@ -108,5 +116,5 @@ que ampliar una lista es seguro: si algo no encaja, salta el test.
 
 ## Fuera de alcance (a propósito)
 
-Categorías temáticas, reconexión a mitad de partida, puntuación acumulada entre
-partidas y chat entre jugadores.
+Categorías temáticas, reconexión a mitad de partida, puntuación entre salas
+distintas y chat entre jugadores.

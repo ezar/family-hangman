@@ -7,6 +7,8 @@ interface Props {
   players: Player[];
   turnIndex: number;
   myId: number | null;
+  /** Quien pone la palabra no entra en el turno: se marca aparte. */
+  setterId?: number | null;
   /** En `waiting` nadie tiene turno todavia: no marcamos a nadie. */
   active: boolean;
 }
@@ -18,11 +20,21 @@ export function playerColor(id: number): string {
   return COLORS[(id - 1) % COLORS.length];
 }
 
-export default function PlayersList({ players, turnIndex, myId, active }: Props) {
+export default function PlayersList({
+  players,
+  turnIndex,
+  myId,
+  setterId = null,
+  active,
+}: Props) {
+  // El turno recorre solo a quienes adivinan.
+  const guessing = players.filter((player) => player.id !== setterId);
   return (
     <ul className="flex flex-wrap items-center justify-center gap-2">
-      {players.map((player, index) => {
-        const isTurn = active && index === turnIndex % players.length;
+      {players.map((player) => {
+        const isSetter = player.id === setterId;
+        const turnPlayer = guessing.length > 0 ? guessing[turnIndex % guessing.length] : null;
+        const isTurn = active && !isSetter && turnPlayer?.id === player.id;
         const isMe = player.id === myId;
         const color = playerColor(player.id);
 
@@ -47,7 +59,21 @@ export default function PlayersList({ players, turnIndex, myId, active }: Props)
               className={`font-display text-sm ${isTurn ? 'text-cream' : 'text-cream/55'}`}
             >
               {player.name}
-              {isMe && <span className="ml-1 text-[0.65rem] uppercase text-cream/40">tu</span>}
+              {isMe && <span className="ml-1 text-[0.65rem] uppercase text-cream/40">tú</span>}
+              {isSetter && (
+                <svg
+                  viewBox="0 0 24 24"
+                  className="ml-1 inline h-3.5 w-3.5 text-honey/80"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-label="pone la palabra"
+                >
+                  <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                </svg>
+              )}
             </span>
           </motion.li>
         );
