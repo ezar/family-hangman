@@ -17,6 +17,7 @@ const {
   partsToDraw,
   currentPlayer,
   guessers,
+  normalizeGame,
   LIVES_BY_DIFFICULTY,
 } = await import('../lib/gameLogic.ts');
 
@@ -258,4 +259,59 @@ test('la palabra escrita por un jugador se limpia como las del banco', () => {
   assert.equal(normalizeCustomWord('a'.repeat(21)), null, 'demasiado larga');
   assert.equal(normalizeCustomWord('dos palabras'), null);
   assert.equal(normalizeCustomWord('perro3'), null);
+});
+
+test('una partida guardada por una version anterior se completa al leerla', () => {
+  // Exactamente la forma que tenia una sala antes del marcador y las pistas:
+  // leerla sin completar rompia el cliente al pintar `scores.wins`.
+  const vieja = {
+    roomCode: 'OLD1',
+    language: 'es',
+    difficulty: 'familiar',
+    status: 'playing',
+    word: 'gato',
+    guessed: ['a'],
+    wrongCount: 0,
+    turnIndex: 1,
+    players: [{ id: 1, name: 'A' }, { id: 2, name: 'B' }],
+    nextId: 3,
+  };
+
+  const game = normalizeGame(vieja);
+  assert.deepEqual(game.scores, { wins: 0, losses: 0, streak: 0 });
+  assert.equal(game.maxWrong, LIVES_BY_DIFFICULTY.familiar);
+  assert.equal(game.wordSource, 'list');
+  assert.equal(game.setterId, null);
+  assert.equal(game.hintsUsed, 0);
+  // Y lo que ya traia no se toca.
+  assert.equal(game.word, 'gato');
+  assert.equal(game.turnIndex, 1);
+  assert.deepEqual(game.guessed, ['a']);
+  assert.equal(game.players.length, 2);
+});
+
+test('completar una partida no altera la que ya esta al dia', () => {
+  const actual = playing('gato');
+  assert.deepEqual(normalizeGame(actual), actual);
+});
+
+test('una partida completada se puede seguir jugando sin romperse', () => {
+  const vieja = normalizeGame({
+    roomCode: 'OLD2',
+    language: 'es',
+    difficulty: 'infantil',
+    status: 'playing',
+    word: 'sol',
+    guessed: [],
+    wrongCount: 0,
+    turnIndex: 0,
+    players: [{ id: 1, name: 'A' }, { id: 2, name: 'B' }],
+    nextId: 3,
+  });
+
+  assert.equal(vieja.maxWrong, LIVES_BY_DIFFICULTY.infantil, 'recupera las vidas de su nivel');
+  const result = applyGuess(vieja, 1, 's');
+  assert.equal(result.ok, true);
+  assert.equal(result.game.scores.wins, 0);
+  assert.equal(toPublicGame(result.game).masked[0], 's');
 });

@@ -17,14 +17,14 @@ const ERRORS: Record<GuessError, { message: string; status: number }> = {
 export async function POST(request: Request) {
   const body = await readBody(request);
   const roomCode = normalizeRoomCode(body.room);
-  if (!roomCode) return jsonError('Código de sala no válido', 400);
+  if (!roomCode) return jsonError('Código de sala no válido', 400, 'bad-code');
 
   const playerId = typeof body.playerId === 'number' ? body.playerId : null;
   if (playerId === null) return jsonError('Falta el jugador', 400);
 
   try {
     const game = await readGame(roomCode);
-    if (!game) return jsonError('Esa sala no existe o ya ha caducado', 404);
+    if (!game) return jsonError('Esa sala no existe o ya ha caducado', 404, 'room-not-found');
 
     const letter = String(body.letter ?? '');
     const result =
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
         : applyGuess(game, playerId, letter);
     if (!result.ok) {
       const { message, status } = ERRORS[result.error];
-      return jsonError(message, status);
+      return jsonError(message, status, result.error);
     }
 
     await writeGame(result.game);

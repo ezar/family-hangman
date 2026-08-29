@@ -1,6 +1,7 @@
 'use client';
 
 import Picker from './Picker';
+import { useT } from './LanguageProvider';
 import type { Difficulty, Language } from '@/lib/types';
 
 interface Props {
@@ -19,27 +20,29 @@ export default function OptionsForm({
   onDifficulty,
   idPrefix,
 }: Props) {
+  const t = useT();
+
   return (
     <div className="flex flex-col gap-4">
       <Picker
-        label="Idioma"
+        label={t.language}
         layoutId={`${idPrefix}-language`}
         value={language}
         onChange={onLanguage}
         options={[
-          { value: 'es', label: 'Español' },
-          { value: 'en', label: 'English' },
+          { value: 'es', label: t.spanish },
+          { value: 'en', label: t.english },
         ]}
       />
       <Picker
-        label="Dificultad"
+        label={t.difficulty}
         layoutId={`${idPrefix}-difficulty`}
         value={difficulty}
         onChange={onDifficulty}
         options={[
-          { value: 'infantil', label: 'Infantil', hint: 'cortas' },
-          { value: 'familiar', label: 'Familiar', hint: 'media' },
-          { value: 'experto', label: 'Experto', hint: 'largas' },
+          { value: 'infantil', label: t.levelKids, hint: t.levelKidsHint },
+          { value: 'familiar', label: t.levelFamily, hint: t.levelFamilyHint },
+          { value: 'experto', label: t.levelExpert, hint: t.levelExpertHint },
         ]}
       />
     </div>

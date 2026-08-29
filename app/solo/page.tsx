@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import Board from '@/components/Board';
 import CandidateCount from '@/components/CandidateCount';
 import EffectToggles from '@/components/EffectToggles';
+import { LanguageProvider, useT } from '@/components/LanguageProvider';
 import Logo from '@/components/Logo';
 import OptionsForm from '@/components/OptionsForm';
 import ResultOverlay from '@/components/ResultOverlay';
@@ -33,6 +34,17 @@ const NO_SCORES: Scores = { wins: 0, losses: 0, streak: 0 };
  */
 export default function SoloPage() {
   const hydrated = useHydratedStore();
+  const language = useGameStore((state) => state.language);
+
+  return (
+    <LanguageProvider language={hydrated ? language : 'es'}>
+      <Solo hydrated={hydrated} />
+    </LanguageProvider>
+  );
+}
+
+function Solo({ hydrated }: { hydrated: boolean }) {
+  const t = useT();
   const { language, difficulty, setLanguage, setDifficulty } = useGameStore();
   const [game, setGame] = useState<Game | null>(null);
   const [evil, setEvil] = useState(false);
@@ -121,9 +133,7 @@ export default function SoloPage() {
           animate={{ opacity: 1, y: 0 }}
           className="panel flex flex-col gap-5 p-5"
         >
-          <p className="text-center text-sm text-cream/50">
-            Elige con qué palabras quieres jugar.
-          </p>
+          <p className="text-center text-sm text-cream/50">{t.chooseWords}</p>
 
           <OptionsForm
             idPrefix="solo"
@@ -150,24 +160,22 @@ export default function SoloPage() {
               🎭
             </span>
             <span className="flex flex-col">
-              <span className="font-display text-base font-semibold">Modo tramposo</span>
-              <span className="text-xs leading-tight text-cream/40">
-                No elige palabra: te esquiva mientras pueda
-              </span>
+              <span className="font-display text-base font-semibold">{t.evilMode}</span>
+              <span className="text-xs leading-tight text-cream/40">{t.evilModeHint}</span>
             </span>
           </button>
 
           <p className="text-center text-xs text-cream/30">
             {hydrated
-              ? `${wordCount(language, difficulty)} palabras · ${LIVES_BY_DIFFICULTY[difficulty]} vidas`
+              ? t.wordsAndLives(wordCount(language, difficulty), LIVES_BY_DIFFICULTY[difficulty])
               : ' '}
           </p>
 
           <button type="button" className="btn-primary w-full" onClick={start}>
-            Empezar
+            {t.start}
           </button>
           <Link href="/" className="text-center text-sm text-cream/40 hover:underline">
-            Volver al inicio
+            {t.backHome}
           </Link>
         </motion.div>
       </main>
@@ -180,7 +188,7 @@ export default function SoloPage() {
     <main className="flex flex-1 flex-col gap-3 py-4">
       <header className="flex items-center justify-between gap-2">
         <Link href="/" className="text-sm text-cream/40 hover:text-cream/70">
-          ← Inicio
+          ← {t.home}
         </Link>
         <Logo compact />
         <div className="flex items-center gap-1">
@@ -190,7 +198,7 @@ export default function SoloPage() {
             onClick={() => setGame(null)}
             className="px-1 text-sm text-cream/40 hover:text-cream/70"
           >
-            Ajustes
+            {t.settings}
           </button>
         </div>
       </header>
@@ -218,14 +226,14 @@ export default function SoloPage() {
       <ResultOverlay
         status={finished}
         word={finished ? game.word : null}
-        actionLabel="Otra palabra"
-        winTitle="¡Ganaste!"
+        actionLabel={t.anotherWord}
+        winTitle={t.youWon}
         onAction={start}
         scores={game.scores}
         evil={game.wordSource === 'evil'}
         secondary={
           <Link href="/" className="block text-sm text-cream/40 hover:underline">
-            Volver al inicio
+            {t.backHome}
           </Link>
         }
       />

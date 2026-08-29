@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import type { Player } from '@/lib/types';
+import { useT } from './LanguageProvider';
 
 interface Props {
   players: Player[];
@@ -27,6 +28,7 @@ export default function PlayersList({
   setterId = null,
   active,
 }: Props) {
+  const t = useT();
   // El turno recorre solo a quienes adivinan.
   const guessing = players.filter((player) => player.id !== setterId);
   return (
@@ -59,7 +61,7 @@ export default function PlayersList({
               className={`font-display text-sm ${isTurn ? 'text-cream' : 'text-cream/55'}`}
             >
               {player.name}
-              {isMe && <span className="ml-1 text-[0.65rem] uppercase text-cream/40">tú</span>}
+              {isMe && <span className="ml-1 text-[0.65rem] uppercase text-cream/40">{t.you}</span>}
               {isSetter && (
                 <svg
                   viewBox="0 0 24 24"
@@ -69,7 +71,7 @@ export default function PlayersList({
                   strokeWidth="2.2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  aria-label="pone la palabra"
+                  aria-label={t.setsTheWord}
                 >
                   <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
                 </svg>

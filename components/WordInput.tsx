@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { MAX_CUSTOM_WORD, MIN_CUSTOM_WORD, normalizeCustomWord } from '@/lib/gameLogic';
+import { useT } from './LanguageProvider';
 
 interface Props {
   label: string;
@@ -15,6 +16,7 @@ interface Props {
  * misma funcion que el servidor, para que el aviso llegue antes de enviar.
  */
 export default function WordInput({ label, submitLabel, onSubmit, busy = false }: Props) {
+  const t = useT();
   const [raw, setRaw] = useState('');
   const [touched, setTouched] = useState(false);
 
@@ -38,7 +40,7 @@ export default function WordInput({ label, submitLabel, onSubmit, busy = false }
         autoCapitalize="none"
         spellCheck={false}
         className="field text-center uppercase tracking-[0.15em]"
-        placeholder="TU PALABRA"
+        placeholder={t.wordPlaceholder}
         maxLength={MAX_CUSTOM_WORD + 4}
         value={raw}
         onChange={(event) => setRaw(event.target.value)}
@@ -46,9 +48,7 @@ export default function WordInput({ label, submitLabel, onSubmit, busy = false }
         onKeyDown={(event) => event.key === 'Enter' && submit()}
       />
       <p className={`text-center text-xs ${problem ? 'text-coral' : 'text-cream/30'}`}>
-        {problem
-          ? `Entre ${MIN_CUSTOM_WORD} y ${MAX_CUSTOM_WORD} letras, una sola palabra`
-          : 'Las tildes y la eñe se ajustan solas'}
+        {problem ? t.wordRules(MIN_CUSTOM_WORD, MAX_CUSTOM_WORD) : t.accentsHandled}
       </p>
       <button
         type="button"
@@ -56,7 +56,7 @@ export default function WordInput({ label, submitLabel, onSubmit, busy = false }
         onClick={submit}
         disabled={busy || !clean}
       >
-        {busy ? 'Enviando...' : submitLabel}
+        {busy ? t.sending : submitLabel}
       </button>
     </div>
   );

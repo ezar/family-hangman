@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useT } from './LanguageProvider';
 
 interface Props {
   /** Ruta relativa, para poder montar la URL absoluta ya en el navegador. */
@@ -11,6 +12,7 @@ interface Props {
 
 /** Compartir nativo si lo hay, portapapeles si no. */
 export default function ShareLink({ path, text, label }: Props) {
+  const t = useT();
   const [copied, setCopied] = useState(false);
 
   async function share() {
@@ -18,7 +20,7 @@ export default function ShareLink({ path, text, label }: Props) {
 
     if (navigator.share) {
       try {
-        await navigator.share({ title: 'Ahorcado en Familia', text, url });
+        await navigator.share({ title: t.appName, text, url });
         return;
       } catch {
         // Compartir cancelado: seguimos con el portapapeles.
@@ -36,7 +38,7 @@ export default function ShareLink({ path, text, label }: Props) {
 
   return (
     <button type="button" onClick={share} className="btn-primary w-full">
-      {copied ? '¡Enlace copiado!' : label}
+      {copied ? t.linkCopied : label}
     </button>
   );
 }

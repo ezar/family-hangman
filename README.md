@@ -46,6 +46,14 @@ por igual la API route del modo grupal y el modo solo en el navegador.
 - La palabra nunca viaja al cliente mientras se juega: la API envía solo la
   máscara (letras acertadas y huecos) y la revela al terminar.
 
+### Partidas de versiones anteriores
+
+Una sala vive horas en Redis, así que tras un despliegue conviven partidas
+escritas por versiones distintas del juego. `normalizeGame` completa al leer
+los campos que falten, con los valores que habría tenido esa partida. Sin eso,
+una sala creada antes de que existiera el marcador rompía el cliente al pintar
+`scores.wins`.
+
 ### Claves en Redis
 
 | Clave | Qué guarda | Caduca |
@@ -131,6 +139,25 @@ lib/
   useFeedback.ts        sonido sintetizado y vibración, sin ficheros de audio
 data/words/             seis listas: {es,en} x {infantil,familiar,experto}
 ```
+
+## Idioma de la interfaz
+
+Los textos viven en `lib/i18n.ts`. El castellano es la fuente: su forma define
+el tipo `Messages`, así que si al inglés le falta una clave o una función
+recibe otros datos, **no compila**. Un test comprueba además que no queden
+textos vacíos ni copiados sin traducir.
+
+Qué idioma habla cada pantalla:
+
+| Pantalla | Idioma |
+|----------|--------|
+| Inicio y modo solo | el que tenga elegido quien juega |
+| Sala | el de la partida: lo fija quien la creó, y todos leen lo mismo |
+| Reto por enlace | el de quien mira; un reto no tiene idioma propio, porque la palabra la escribe una persona |
+
+Los errores de la API viajan con un código además del texto. El servidor no
+sabe en qué idioma está mirando quien recibe la respuesta, así que el cliente
+traduce el código y el texto castellano queda solo como respaldo.
 
 ## Palabras
 

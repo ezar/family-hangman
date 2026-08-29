@@ -1,13 +1,14 @@
+'use client';
+
+import { useT } from './LanguageProvider';
 import type { AttemptResult } from '@/lib/challenge';
 
 /** Quien ha intentado el reto y como le fue. Es el premio de quien lo creo. */
 export default function ResultsTable({ results }: { results: AttemptResult[] }) {
+  const t = useT();
+
   if (results.length === 0) {
-    return (
-      <p className="text-center text-sm text-cream/35">
-        Todavía no lo ha intentado nadie.
-      </p>
-    );
+    return <p className="text-center text-sm text-cream/35">{t.nobodyYet}</p>;
   }
 
   return (
@@ -25,9 +26,7 @@ export default function ResultsTable({ results }: { results: AttemptResult[] }) 
           <span
             className={`text-xs ${result.status === 'won' ? 'text-mint' : 'text-coral'}`}
           >
-            {result.status === 'won'
-              ? `${result.wrongCount} ${result.wrongCount === 1 ? 'fallo' : 'fallos'}`
-              : 'no pudo'}
+            {result.status === 'won' ? t.mistakes(result.wrongCount) : t.couldNot}
           </span>
         </li>
       ))}

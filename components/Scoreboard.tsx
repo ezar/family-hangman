@@ -1,13 +1,18 @@
+'use client';
+
+import { useT } from './LanguageProvider';
 import type { Scores } from '@/lib/types';
 
 /** Marcador de la sala: acumulado entre rondas, no entre salas. */
 export default function Scoreboard({ scores }: { scores: Scores }) {
+  const t = useT();
+
   if (scores.wins === 0 && scores.losses === 0) return null;
 
   const items = [
-    { label: 'Ganadas', value: scores.wins, tone: 'text-mint' },
-    { label: 'Perdidas', value: scores.losses, tone: 'text-coral' },
-    ...(scores.streak >= 2 ? [{ label: 'Racha', value: scores.streak, tone: 'text-honey' }] : []),
+    { label: t.wins, value: scores.wins, tone: 'text-mint' },
+    { label: t.losses, value: scores.losses, tone: 'text-coral' },
+    ...(scores.streak >= 2 ? [{ label: t.streak, value: scores.streak, tone: 'text-honey' }] : []),
   ];
 
   return (

@@ -1,3 +1,7 @@
+'use client';
+
+import { useT } from './LanguageProvider';
+
 /** Un corazon por vida: el marcador de fallos, legible de un vistazo. */
 export default function LivesMeter({
   wrongCount,
@@ -6,8 +10,10 @@ export default function LivesMeter({
   wrongCount: number;
   maxWrong: number;
 }) {
+  const t = useT();
+
   return (
-    <div className="flex items-center gap-1.5" aria-label={`Vidas: ${maxWrong - wrongCount}`}>
+    <div className="flex items-center gap-1.5" aria-label={t.livesLeft(maxWrong - wrongCount)}>
       {Array.from({ length: maxWrong }, (_, index) => {
         // Las vidas restantes se agrupan a la izquierda; se apagan por la derecha.
         const lost = index >= maxWrong - wrongCount;

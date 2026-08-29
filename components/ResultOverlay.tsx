@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Confetti from './Confetti';
 import Scoreboard from './Scoreboard';
 import type { Scores } from '@/lib/types';
+import { useT } from './LanguageProvider';
 
 interface Props {
   status: 'won' | 'lost' | null;
@@ -25,15 +26,16 @@ interface Props {
 export default function ResultOverlay({
   status,
   word,
-  actionLabel = 'Otra palabra',
+  actionLabel,
   onAction,
   busy = false,
   secondary,
-  winTitle = '¡Ganasteis!',
+  winTitle,
   scores,
   evil = false,
   children,
 }: Props) {
+  const t = useT();
   const won = status === 'won';
 
   return (
@@ -70,12 +72,12 @@ export default function ResultOverlay({
                 won ? 'text-mint' : 'text-coral'
               }`}
             >
-              {won ? winTitle : 'Se acabó'}
+              {won ? (winTitle ?? t.youAllWon) : t.gameOver}
             </h2>
 
             {word && (
               <p className="mt-3 text-sm text-cream/55">
-                {evil ? 'Acabó siendo' : 'La palabra era'}{' '}
+                {evil ? t.itEndedUpBeing : t.theWordWas}{' '}
                 <strong className="font-display text-lg uppercase tracking-widest text-cream">
                   {word}
                 </strong>
@@ -84,8 +86,7 @@ export default function ResultOverlay({
 
             {evil && (
               <p className="mt-4 rounded-xl border border-grape/30 bg-grape/10 px-4 py-3 text-sm text-grape">
-                No había ninguna palabra elegida: el juego iba cambiándola sobre la marcha
-                entre todas las que encajaban con tus respuestas.
+                {t.evilConfession}
               </p>
             )}
 
@@ -104,7 +105,7 @@ export default function ResultOverlay({
                 disabled={busy}
                 className="btn-primary mt-5 w-full"
               >
-                {busy ? 'Cargando...' : actionLabel}
+                {busy ? t.loading : (actionLabel ?? t.anotherWord)}
               </button>
             )}
             {secondary && <div className="mt-3">{secondary}</div>}

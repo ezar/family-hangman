@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import Board from '@/components/Board';
 import CandidateCount from '@/components/CandidateCount';
 import EffectToggles from '@/components/EffectToggles';
+import { LanguageProvider, useT } from '@/components/LanguageProvider';
 import Logo from '@/components/Logo';
 import PlayersList from '@/components/PlayersList';
 import ResultOverlay from '@/components/ResultOverlay';
@@ -16,10 +17,30 @@ import { currentPlayer, MAX_HINTS, remainingLives } from '@/lib/gameLogic';
 import { useGameStore } from '@/lib/gameStore';
 import { useFeedback } from '@/lib/useFeedback';
 import { useHydratedStore } from '@/lib/useHydratedStore';
+import { localizeError } from '@/lib/apiError';
 import { useRoom } from '@/lib/useRoom';
-import type { PublicGame } from '@/lib/types';
+import type { Language, PublicGame } from '@/lib/types';
 
 export default function RoomClient({ roomCode }: { roomCode: string }) {
+  const [language, setLanguage] = useState<Language>('es');
+
+  // El idioma de una sala lo fija quien la creo, no quien la mira: todos los
+  // jugadores leen lo mismo, jueguen desde donde jueguen.
+  return (
+    <LanguageProvider language={language}>
+      <Room roomCode={roomCode} onLanguage={setLanguage} />
+    </LanguageProvider>
+  );
+}
+
+function Room({
+  roomCode,
+  onLanguage,
+}: {
+  roomCode: string;
+  onLanguage: (language: Language) => void;
+}) {
+  const t = useT();
   const hydrated = useHydratedStore();
   const { name, setName, rememberIdentity, identities } = useGameStore();
   const playerId = hydrated ? (identities[roomCode] ?? null) : null;
@@ -28,6 +49,11 @@ export default function RoomClient({ roomCode }: { roomCode: string }) {
   const [joining, setJoining] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
   useRoomFeedback(game);
+
+  // En cuanto llega el estado de la sala, la pantalla adopta su idioma.
+  useEffect(() => {
+    if (game) onLanguage(game.language);
+  }, [game, onLanguage]);
 
   const join = useCallback(async () => {
     setJoining(true);
@@ -39,14 +65,14 @@ export default function RoomClient({ roomCode }: { roomCode: string }) {
         body: JSON.stringify({ room: roomCode, name }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? 'No se pudo entrar');
+      if (!response.ok) throw new Error(localizeError(t, data, t.somethingWrong));
       rememberIdentity({ roomCode, playerId: data.playerId });
     } catch (problem) {
-      setJoinError(problem instanceof Error ? problem.message : 'No se pudo entrar');
+      setJoinError(problem instanceof Error ? problem.message : t.somethingWrong);
     } finally {
       setJoining(false);
     }
-  }, [name, rememberIdentity, roomCode]);
+  }, [name, rememberIdentity, roomCode, t]);
 
   const view = useMemo(() => {
     if (!game) return null;
@@ -67,14 +93,14 @@ export default function RoomClient({ roomCode }: { roomCode: string }) {
     };
   }, [game, playerId]);
 
-  if (!hydrated || (loading && !game)) return <Centered>Cargando sala...</Centered>;
+  if (!hydrated || (loading && !game)) return <Centered>{t.loadingRoom}</Centered>;
 
   if (error && !game) {
     return (
       <Centered>
         <p className="text-coral">{error}</p>
         <Link href="/" className="btn-ghost mt-6">
-          Volver al inicio
+          {t.backHome}
         </Link>
       </Centered>
     );
@@ -87,30 +113,30 @@ export default function RoomClient({ roomCode }: { roomCode: string }) {
         <Logo />
         <div className="panel flex flex-col gap-5 p-5">
           <p className="text-center text-sm text-cream/55">
-            Te han invitado a la sala{' '}
+            {t.invitedTo}{' '}
             <strong className="font-display tracking-[0.2em] text-honey">{roomCode}</strong>
           </p>
           <input
             className="field"
-            placeholder="Tu nombre"
+            placeholder={t.yourName}
             maxLength={16}
             value={name}
             onChange={(event) => setName(event.target.value)}
             onKeyDown={(event) => event.key === 'Enter' && join()}
           />
           <button type="button" className="btn-primary w-full" onClick={join} disabled={joining}>
-            {joining ? 'Entrando...' : 'Entrar a la partida'}
+            {joining ? t.entering : t.enterGame}
           </button>
           {joinError && <p className="text-center text-sm text-coral">{joinError}</p>}
           <Link href="/" className="text-center text-sm text-cream/40 hover:underline">
-            Volver al inicio
+            {t.backHome}
           </Link>
         </div>
       </main>
     );
   }
 
-  if (!game || !view) return <Centered>Cargando sala...</Centered>;
+  if (!game || !view) return <Centered>{t.loadingRoom}</Centered>;
 
   // Aun no hay con quien jugar: el codigo, bien grande, para compartirlo.
   if (game.status === 'waiting') {
@@ -124,7 +150,7 @@ export default function RoomClient({ roomCode }: { roomCode: string }) {
             transition={{ duration: 1.8, repeat: Infinity }}
             className="font-display text-lg"
           >
-            Esperando a que entre alguien más...
+            {t.waitingForSomeone}
           </motion.span>
           <PlayersList
             players={game.players}
@@ -134,13 +160,11 @@ export default function RoomClient({ roomCode }: { roomCode: string }) {
             active={false}
           />
           <p className="text-center text-xs text-cream/30">
-            {view.amSetter
-              ? 'Tu palabra ya está guardada. Empieza en cuanto entre alguien.'
-              : 'La partida arranca sola en cuanto seáis dos.'}
+            {view.amSetter ? t.yourWordIsSaved : t.startsWhenTwo}
           </p>
         </div>
         <Link href="/" className="text-center text-sm text-cream/40 hover:underline">
-          Salir de la sala
+          {t.leaveRoom}
         </Link>
       </main>
     );
@@ -162,10 +186,10 @@ export default function RoomClient({ roomCode }: { roomCode: string }) {
         className={`font-display text-lg ${view.myTurn ? 'text-honey' : 'text-cream/45'}`}
       >
         {view.amSetter
-          ? 'Tu palabra, que la adivinen'
+          ? t.yourWordLetThemGuess
           : view.myTurn
-            ? '¡Te toca!'
-            : `Turno de ${view.active?.name ?? '...'}`}
+            ? t.yourTurn
+            : t.turnOf(view.active?.name ?? '...')}
       </motion.p>
       <Scoreboard scores={game.scores} />
       <CandidateCount count={game.candidatesLeft} />
@@ -177,7 +201,7 @@ export default function RoomClient({ roomCode }: { roomCode: string }) {
     <main className="flex flex-1 flex-col gap-3 py-4">
       <header className="flex items-center justify-between gap-2">
         <Link href="/" className="text-sm text-cream/40 hover:text-cream/70">
-          ← Salir
+          ← {t.leave}
         </Link>
         <Logo compact />
         <div className="flex items-center gap-2">
@@ -209,12 +233,12 @@ export default function RoomClient({ roomCode }: { roomCode: string }) {
         word={game.word}
         scores={game.scores}
         evil={game.wordSource === 'evil'}
-        actionLabel="Otra palabra"
+        actionLabel={t.anotherWord}
         // En palabra propia, la siguiente ronda la abre quien la pone.
         onAction={game.wordSource === 'player' ? undefined : () => restart()}
         secondary={
           <Link href="/" className="block text-sm text-cream/40 hover:underline">
-            Salir de la sala
+            {t.leaveRoom}
           </Link>
         }
       >
@@ -222,14 +246,14 @@ export default function RoomClient({ roomCode }: { roomCode: string }) {
           (view.amSetter ? (
             <div className="mt-5">
               <WordInput
-                label="Otra palabra para la siguiente ronda"
-                submitLabel="Empezar ronda"
+                label={t.nextRoundWord}
+                submitLabel={t.startRound}
                 onSubmit={(word) => restart(word)}
               />
             </div>
           ) : (
             <p className="mt-5 text-sm text-cream/45">
-              {view.setter?.name ?? 'Quien pone la palabra'} está eligiendo la siguiente...
+              {t.choosingNext(view.setter?.name ?? '...')}
             </p>
           ))}
       </ResultOverlay>

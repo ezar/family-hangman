@@ -43,7 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es" className={`${display.variable} ${body.variable}`}>
       <body>
         <Backdrop />
-        <div className="relative z-10 mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col px-4">
+        <div className="safe-top relative z-10 mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col px-4">
           {children}
         </div>
       </body>

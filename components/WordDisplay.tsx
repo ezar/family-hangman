@@ -1,6 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
+import { useT } from './LanguageProvider';
 
 interface Props {
   /** Una entrada por letra: la letra si esta acertada, null si sigue oculta. */
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export default function WordDisplay({ masked, reveal }: Props) {
+  const t = useT();
   // Las palabras largas encogen las fichas para no salirse del movil.
   const size =
     masked.length > 12
@@ -28,7 +30,7 @@ export default function WordDisplay({ masked, reveal }: Props) {
           <div
             key={index}
             className={`relative ${size} [perspective:600px]`}
-            aria-label={letter ?? 'hueco'}
+            aria-label={letter ?? t.gap}
           >
             <AnimatePresence mode="wait" initial={false}>
               {shown ? (

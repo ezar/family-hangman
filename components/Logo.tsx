@@ -1,16 +1,23 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { useT } from './LanguageProvider';
 
-const WORD = 'AHORCADO';
-/** Las fichas que salen ya "acertadas": el guino a la mecanica del juego. */
-const REVEALED = new Set([0, 3, 5, 7]);
+/**
+ * Las fichas que salen ya "acertadas", en proporcion al largo de la palabra:
+ * el guino a la mecanica funciona igual con AHORCADO que con HANGMAN.
+ */
+function revealedIndexes(length: number): Set<number> {
+  return new Set([0, Math.floor(length * 0.4), Math.floor(length * 0.65), length - 1]);
+}
 
 export default function Logo({ compact = false }: { compact?: boolean }) {
+  const t = useT();
+
   if (compact) {
     return (
       <span className="font-display text-lg font-semibold tracking-tight text-cream/80">
-        Ahorcado
+        {t.wordmarkShort}
       </span>
     );
   }
@@ -18,8 +25,8 @@ export default function Logo({ compact = false }: { compact?: boolean }) {
   return (
     <div className="flex flex-col items-center gap-3">
       <div className="flex gap-1">
-        {WORD.split('').map((letter, index) => {
-          const revealed = REVEALED.has(index);
+        {t.wordmark.split('').map((letter, index, all) => {
+          const revealed = revealedIndexes(all.length).has(index);
           return (
             <motion.span
               key={index}
@@ -40,7 +47,7 @@ export default function Logo({ compact = false }: { compact?: boolean }) {
         })}
       </div>
       <p className="font-display text-sm font-medium tracking-[0.42em] text-honey/60">
-        EN FAMILIA
+        {t.tagline}
       </p>
     </div>
   );
