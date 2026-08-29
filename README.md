@@ -170,9 +170,31 @@ minúsculas y sin acentos ni eñes (para que el teclado sea de 26 letras).
 | Familiar  | 5-11     | uso general                |
 | Experto   | 8+       | adultos, reto real         |
 
-Entre 220 y 320 palabras por lista. Los tests comprueban que no haya
-duplicados, caracteres inválidos ni palabras fuera de la banda de su nivel, así
-que ampliar una lista es seguro: si algo no encaja, salta el test.
+Más de mil palabras por idioma. La longitud decide en qué banda cabe una
+palabra, pero **no** basta para decidir su nivel: "dogma" es corta y no es una
+palabra infantil. Una palabra puede subir a un nivel más difícil si no cabe en
+el suyo, pero una pensada para adultos nunca baja a infantil, que es "cortas
+**y** muy comunes".
+
+Los tests comprueban que no haya duplicados, caracteres inválidos, palabras
+fuera de la banda de su nivel ni menos de mil por idioma.
+
+### Auditar las palabras
+
+Los tests validan la forma, no que la palabra exista: `cigueena` pasaba los
+tres y no es nada. Para eso está `scripts/auditar-palabras.mjs`, que contrasta
+las seis listas contra un diccionario real de cada idioma:
+
+```bash
+npm i --no-save an-array-of-spanish-words an-array-of-english-words
+node scripts/auditar-palabras.mjs
+```
+
+Los diccionarios pesan 11 MB y solo hacen falta al ampliar las listas, así que
+no son dependencia del proyecto. Tienen lagunas (les faltan *cigüeña*, *koala*
+o *brócoli*), de ahí la lista `ACEPTADAS` dentro del script: palabras
+comprobadas a mano que el diccionario no trae. Convive mal con el ruido, así
+que conviene añadir ahí solo lo verificado.
 
 ## Fuera de alcance (a propósito)
 

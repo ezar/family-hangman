@@ -131,6 +131,17 @@ test('los codigos de sala son legibles y sin caracteres ambiguos', () => {
   assert.equal(normalizeRoomCode('AB'), null);
 });
 
+test('cada idioma pasa de mil palabras', () => {
+  for (const language of ['es', 'en']) {
+    const total = ['infantil', 'familiar', 'experto'].reduce(
+      (count, difficulty) =>
+        count + JSON.parse(readFileSync(`data/words/${language}-${difficulty}.json`, 'utf8')).length,
+      0,
+    );
+    assert.ok(total >= 1000, `${language} tiene ${total} palabras, menos de mil`);
+  }
+});
+
 test('todas las listas de palabras son utilizables', () => {
   const files = readdirSync('data/words').filter((name) => name.endsWith('.json'));
   assert.equal(files.length, 6);
@@ -141,7 +152,7 @@ test('todas las listas de palabras son utilizables', () => {
     const words = JSON.parse(readFileSync(`data/words/${file}`, 'utf8'));
     const [min, max] = limits[difficulty];
 
-    assert.ok(words.length >= 150, `${file} tiene solo ${words.length} palabras`);
+    assert.ok(words.length >= 250, `${file} tiene solo ${words.length} palabras`);
     assert.equal(new Set(words).size, words.length, `${file} tiene duplicados`);
     for (const word of words) {
       assert.match(word, /^[a-z]+$/, `${file}: "${word}" tiene caracteres no validos`);
