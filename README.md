@@ -46,7 +46,21 @@ npm run dev
 
 El modo solo funciona sin configurar nada. El modo grupal necesita Upstash
 Redis: en Vercel se añade desde el marketplace (plan gratuito) y las variables
-`UPSTASH_REDIS_REST_URL` y `UPSTASH_REDIS_REST_TOKEN` se inyectan solas.
+se inyectan solas.
+
+Según cómo se instale la integración, las credenciales aparecen con uno u otro
+nombre, así que el código acepta los dos pares y usa el primero que esté
+completo:
+
+| Par | Origen |
+|-----|--------|
+| `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` | integración de Upstash |
+| `KV_REST_API_URL` + `KV_REST_API_TOKEN` | nombres heredados de Vercel KV |
+
+`KV_REST_API_READ_ONLY_TOKEN` no sirve: el juego escribe en Redis con cada
+letra. Al conectar la base de datos conviene marcar los tres entornos
+(Production, Preview y Development), o `vercel env pull` no traerá nada para
+desarrollar en local.
 
 Las salas caducan a las 12 horas para no acumular basura en Redis.
 

@@ -1,4 +1,5 @@
 import { Redis } from '@upstash/redis';
+import { missingCredentialsMessage, resolveRedisCredentials } from './redisEnv';
 import type { Game } from './types';
 
 /** Las salas caducan solas: nadie vuelve a una partida de hace medio dia. */
@@ -9,17 +10,12 @@ let client: Redis | null = null;
 export function getRedis(): Redis {
   if (client) return client;
 
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-
-  if (!url || !token) {
-    throw new Error(
-      'Faltan UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN. ' +
-        'Añade la integración de Upstash Redis en Vercel o copia .env.example a .env.local.',
-    );
+  const credentials = resolveRedisCredentials(process.env);
+  if (!credentials) {
+    throw new Error(missingCredentialsMessage());
   }
 
-  client = new Redis({ url, token });
+  client = new Redis({ url: credentials.url, token: credentials.token });
   return client;
 }
 
