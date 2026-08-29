@@ -142,6 +142,13 @@ const es = {
   wordOfLetters: 'letras.',
   aWordOf: 'Una palabra de',
   acceptChallenge: 'Aceptar el reto',
+  alreadyPlayed: 'Ya lo jugaste',
+  yourResultWon: (mistakes: number): string =>
+    mistakes === 0
+      ? 'Lo adivinaste sin fallar'
+      : `Lo adivinaste con ${mistakes} ${mistakes === 1 ? 'fallo' : 'fallos'}`,
+  yourResultLost: 'No pudiste con ella',
+  resumeGame: 'Seguir jugando',
   preparing: 'Preparando...',
   whoTriedIt: 'Quién lo ha intentado',
   nobodyYet: 'Todavía no lo ha intentado nadie.',
@@ -325,6 +332,11 @@ const en: Messages = {
   wordOfLetters: 'letters.',
   aWordOf: 'A word of',
   acceptChallenge: 'Accept the challenge',
+  alreadyPlayed: 'You already played it',
+  yourResultWon: (mistakes) =>
+    mistakes === 0 ? 'You got it with no mistakes' : `You got it with ${mistakes} ${mistakes === 1 ? 'mistake' : 'mistakes'}`,
+  yourResultLost: 'You could not get it',
+  resumeGame: 'Carry on playing',
   preparing: 'Getting ready...',
   whoTriedIt: 'Who has tried it',
   nobodyYet: 'Nobody has tried it yet.',

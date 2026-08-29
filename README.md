@@ -17,7 +17,9 @@ dificultad.
 - **Reto por enlace** — escribes una palabra y te llevas un enlace. Quien lo
   abre juega tu palabra al momento, sin sala, sin esperar a nadie y sin
   instalar nada. Pueden jugarlo muchas personas por separado, y quien lo creó
-  ve la tabla de quién lo ha intentado y cómo le fue.
+  ve la tabla de quién lo ha intentado y cómo le fue. Cada persona lo juega
+  **una vez**: si vuelves al enlace, ves tu resultado en vez de poder repetir,
+  y si lo dejaste a medias lo retomas donde estaba.
 
 ## Cómo funciona
 
