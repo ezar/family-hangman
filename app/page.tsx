@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import Logo from '@/components/Logo';
-import { GroupIcon, SoloIcon } from '@/components/ModeIcon';
+import { ChallengeIcon, GroupIcon, SoloIcon } from '@/components/ModeIcon';
 import OptionsForm from '@/components/OptionsForm';
 import Picker from '@/components/Picker';
 import WordInput from '@/components/WordInput';
@@ -102,6 +102,13 @@ export default function HomePage() {
               description="Crea una sala, comparte el código y jugad por turnos."
               accent="from-grape/30"
               onClick={() => setPanel('group')}
+            />
+            <ModeCard
+              icon={<ChallengeIcon className="h-11 w-11 text-coral" />}
+              title="Retar a alguien"
+              description="Pon una palabra y manda el enlace por donde quieras."
+              accent="from-coral/30"
+              onClick={() => router.push('/reto')}
             />
           </motion.div>
         ) : (
@@ -209,7 +216,7 @@ export default function HomePage() {
       </AnimatePresence>
 
       <ul className="flex items-center justify-center gap-2 text-[0.7rem] text-cream/30">
-        {['6 vidas', 'Español e inglés', '3 niveles'].map((feature) => (
+        {['Sin instalar nada', 'Español e inglés', '3 niveles'].map((feature) => (
           <li key={feature} className="rounded-full border border-white/10 px-3 py-1.5">
             {feature}
           </li>

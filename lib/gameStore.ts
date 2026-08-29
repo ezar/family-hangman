@@ -20,12 +20,18 @@ interface GameState {
   /** Efectos: se pueden apagar por separado (movil en silencio, por ejemplo). */
   sound: boolean;
   vibration: boolean;
+  /** Mi intento en cada reto, para que recargar no lo pierda. */
+  attempts: Record<string, string>;
+  /** Retos que he creado yo, para volver a ver quien ha picado. */
+  myChallenges: string[];
   setName: (name: string) => void;
   setLanguage: (language: Language) => void;
   setDifficulty: (difficulty: Difficulty) => void;
   rememberIdentity: (identity: RoomIdentity) => void;
   toggleSound: () => void;
   toggleVibration: () => void;
+  rememberAttempt: (code: string, attemptId: string) => void;
+  rememberChallenge: (code: string) => void;
   playerIdFor: (roomCode: string) => number | null;
 }
 
@@ -38,6 +44,8 @@ export const useGameStore = create<GameState>()(
       identities: {},
       sound: true,
       vibration: true,
+      attempts: {},
+      myChallenges: [],
       setName: (name) => set({ name }),
       setLanguage: (language) => set({ language }),
       setDifficulty: (difficulty) => set({ difficulty }),
@@ -45,6 +53,12 @@ export const useGameStore = create<GameState>()(
         set((state) => ({ identities: { ...state.identities, [roomCode]: playerId } })),
       toggleSound: () => set((state) => ({ sound: !state.sound })),
       toggleVibration: () => set((state) => ({ vibration: !state.vibration })),
+      rememberAttempt: (code, attemptId) =>
+        set((state) => ({ attempts: { ...state.attempts, [code]: attemptId } })),
+      rememberChallenge: (code) =>
+        set((state) => ({
+          myChallenges: [code, ...state.myChallenges.filter((c) => c !== code)].slice(0, 20),
+        })),
       playerIdFor: (roomCode) => get().identities[roomCode] ?? null,
     }),
     {

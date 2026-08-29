@@ -30,3 +30,17 @@ export function GroupIcon({ className = '' }: { className?: string }) {
     </svg>
   );
 }
+
+export function ChallengeIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" className={className} fill="none" aria-hidden>
+      <path
+        d="M8 10h32v22H20l-8 7v-7H8z"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinejoin="round"
+      />
+      <path d="M18 21h2M23 21h2M28 21h2" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" />
+    </svg>
+  );
+}

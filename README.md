@@ -9,6 +9,10 @@ dificultad.
 - **Partida grupal** — se crea una sala con código de 4 caracteres, se comparte
   el enlace y se juega por turnos desde cualquier móvil. La palabra puede salir
   del banco o **ponerla un jugador**, que entonces mira sin jugar.
+- **Reto por enlace** — escribes una palabra y te llevas un enlace. Quien lo
+  abre juega tu palabra al momento, sin sala, sin esperar a nadie y sin
+  instalar nada. Pueden jugarlo muchas personas por separado, y quien lo creó
+  ve la tabla de quién lo ha intentado y cómo le fue.
 
 ## Cómo funciona
 
@@ -35,13 +39,26 @@ por igual la API route del modo grupal y el modo solo en el navegador.
 - La palabra nunca viaja al cliente mientras se juega: la API envía solo la
   máscara (letras acertadas y huecos) y la revela al terminar.
 
+### Claves en Redis
+
+| Clave | Qué guarda | Caduca |
+|-------|------------|--------|
+| `game:{sala}` | la partida grupal entera, un blob JSON | 12 h |
+| `challenge:{código}` | el reto: palabra, autor y fecha. **Nunca se modifica** | 7 días |
+| `challenge:{código}:results` | lista de resultados, uno por intento | 7 días |
+| `attempt:{id}` | la partida de una persona contra un reto | 24 h |
+
 ### Aviso de concurrencia
 
-La mutación lee el JSON de Redis, lo modifica y lo vuelve a escribir entero. Si
-dos jugadores enviasen una letra en el mismo instante exacto hay una ventana de
-carrera teórica. Para un juego familiar por turnos es un riesgo asumido; si
-llegase a molestar se resuelve con un script Lua atómico de Upstash o con un
-compare-and-swap.
+La mutación de una sala lee el JSON de Redis, lo modifica y lo vuelve a
+escribir entero. Si dos jugadores enviasen una letra en el mismo instante
+exacto hay una ventana de carrera teórica. Para un juego familiar por turnos es
+un riesgo asumido; si llegase a molestar se resuelve con un script Lua atómico
+de Upstash o con un compare-and-swap.
+
+Los retos no tienen ese problema: el reto es inmutable después de crearse y los
+resultados van a una lista aparte con `LPUSH`, que es atómico. Diez personas
+pueden terminar a la vez sin pisarse.
 
 ## Puesta en marcha
 
@@ -88,10 +105,13 @@ app/
   page.tsx              elegir modo, crear sala o unirse
   solo/page.tsx         ahorcado de un jugador, sin red
   room/[code]/          tablero de la partida grupal
+  reto/                 crear un reto; reto/[code] jugarlo y ver la tabla
   api/                  create · join · state · guess · hint · restart
+    challenge/          create · info · start · guess · hint
 components/             tablero, teclado, dibujo, overlays
 lib/
   gameLogic.ts          lógica pura: turnos, victoria y derrota
+  challenge.ts          retos por enlace: código, intento y tabla
   redis.ts              cliente de Upstash
   gameStore.ts          estado local del cliente (Zustand)
   useRoom.ts            polling del estado de la sala
