@@ -2,6 +2,8 @@
 
 import { AnimatePresence, motion } from 'framer-motion';
 import Confetti from './Confetti';
+import Scoreboard from './Scoreboard';
+import type { Scores } from '@/lib/types';
 
 interface Props {
   status: 'won' | 'lost' | null;
@@ -13,6 +15,9 @@ interface Props {
   secondary?: React.ReactNode;
   /** En solitario se gana en singular; en sala, en plural. */
   winTitle?: string;
+  scores?: Scores;
+  /** Contenido extra antes del boton (por ejemplo, pedir la palabra siguiente). */
+  children?: React.ReactNode;
 }
 
 export default function ResultOverlay({
@@ -23,6 +28,8 @@ export default function ResultOverlay({
   busy = false,
   secondary,
   winTitle = '¡Ganasteis!',
+  scores,
+  children,
 }: Props) {
   const won = status === 'won';
 
@@ -72,12 +79,20 @@ export default function ResultOverlay({
               </p>
             )}
 
+            {scores && (
+              <div className="mt-5">
+                <Scoreboard scores={scores} />
+              </div>
+            )}
+
+            {children}
+
             {onAction && (
               <button
                 type="button"
                 onClick={onAction}
                 disabled={busy}
-                className="btn-primary mt-7 w-full"
+                className="btn-primary mt-5 w-full"
               >
                 {busy ? 'Cargando...' : actionLabel}
               </button>

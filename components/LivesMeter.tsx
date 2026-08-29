@@ -1,17 +1,21 @@
-import { MAX_WRONG } from '@/lib/gameLogic';
-
-/** Seis corazones: el marcador de fallos, legible de un vistazo desde lejos. */
-export default function LivesMeter({ wrongCount }: { wrongCount: number }) {
+/** Un corazon por vida: el marcador de fallos, legible de un vistazo. */
+export default function LivesMeter({
+  wrongCount,
+  maxWrong,
+}: {
+  wrongCount: number;
+  maxWrong: number;
+}) {
   return (
-    <div className="flex items-center gap-1.5" aria-label={`Vidas: ${MAX_WRONG - wrongCount}`}>
-      {Array.from({ length: MAX_WRONG }, (_, index) => {
+    <div className="flex items-center gap-1.5" aria-label={`Vidas: ${maxWrong - wrongCount}`}>
+      {Array.from({ length: maxWrong }, (_, index) => {
         // Las vidas restantes se agrupan a la izquierda; se apagan por la derecha.
-        const lost = index >= MAX_WRONG - wrongCount;
+        const lost = index >= maxWrong - wrongCount;
         return (
           <svg
             key={index}
             viewBox="0 0 24 24"
-            className={`h-4 w-4 transition-all duration-300 ${
+            className={`h-3.5 w-3.5 transition-all duration-300 ${
               lost ? 'scale-90 text-cream/15' : 'text-coral drop-shadow-[0_0_6px_rgba(255,107,107,0.55)]'
             }`}
             fill="currentColor"

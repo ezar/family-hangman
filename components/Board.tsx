@@ -12,10 +12,13 @@ interface Props {
   guessed: string[];
   hits: string[];
   wrongCount: number;
+  maxWrong: number;
   lost: boolean;
   disabled: boolean;
   onGuess: (letter: string) => void;
-  /** Banda superior: de quien es el turno, o el aviso de la sala. */
+  /** Comodin: null lo oculta (por ejemplo para quien pone la palabra). */
+  onHint?: (() => void) | null;
+  hintAvailable?: boolean;
   banner?: React.ReactNode;
   reveal?: string | null;
 }
@@ -25,9 +28,12 @@ export default function Board({
   guessed,
   hits,
   wrongCount,
+  maxWrong,
   lost,
   disabled,
   onGuess,
+  onHint,
+  hintAvailable = false,
   banner,
   reveal,
 }: Props) {
@@ -52,18 +58,34 @@ export default function Board({
         transition={{ duration: 0.42 }}
         className="flex flex-1 flex-col justify-center gap-5"
       >
-        {/* El escenario: un panel que enmarca el dibujo para que no flote en
-            medio de la pantalla, con las vidas en una esquina. */}
         {/* Altura acotada: el escenario no debe comerse el sitio de la palabra. */}
         <div
           className="panel relative flex max-h-[42vh] min-h-[13rem] flex-1 items-center
                      justify-center overflow-hidden px-4 py-4"
         >
           <div className="absolute left-4 top-4">
-            <LivesMeter wrongCount={wrongCount} />
+            <LivesMeter wrongCount={wrongCount} maxWrong={maxWrong} />
           </div>
+
+          {onHint && (
+            <button
+              type="button"
+              onClick={onHint}
+              disabled={!hintAvailable}
+              className="absolute right-3 top-3 flex items-center gap-1.5 rounded-xl border
+                         border-honey/30 bg-honey/10 px-3 py-2 font-display text-sm text-honey
+                         transition-colors enabled:hover:bg-honey/20
+                         disabled:border-white/5 disabled:bg-transparent disabled:text-cream/20"
+            >
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2Z" />
+              </svg>
+              Pista
+            </button>
+          )}
+
           <div className="relative h-full w-full max-w-[14rem]">
-            <HangmanDrawing wrongCount={wrongCount} lost={lost} />
+            <HangmanDrawing wrongCount={wrongCount} maxWrong={maxWrong} lost={lost} />
           </div>
         </div>
 

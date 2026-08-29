@@ -6,6 +6,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Logo from '@/components/Logo';
 import { GroupIcon, SoloIcon } from '@/components/ModeIcon';
 import OptionsForm from '@/components/OptionsForm';
+import Picker from '@/components/Picker';
+import WordInput from '@/components/WordInput';
 import { useGameStore } from '@/lib/gameStore';
 import { useHydratedStore } from '@/lib/useHydratedStore';
 import { normalizeRoomCode } from '@/lib/gameLogic';
@@ -19,6 +21,7 @@ export default function HomePage() {
     useGameStore();
 
   const [panel, setPanel] = useState<Panel>('menu');
+  const [wordSource, setWordSource] = useState<'list' | 'player'>('list');
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState<'create' | 'join' | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -34,11 +37,11 @@ export default function HomePage() {
     return data as { game: { roomCode: string }; playerId: number };
   }
 
-  async function createRoom() {
+  async function createRoom(word?: string) {
     setBusy('create');
     setError(null);
     try {
-      const data = await call('/api/create', { name, language, difficulty });
+      const data = await call('/api/create', { name, language, difficulty, wordSource, word });
       rememberIdentity({ roomCode: data.game.roomCode, playerId: data.playerId });
       router.push(`/room/${data.game.roomCode}`);
     } catch (problem) {
@@ -124,22 +127,44 @@ export default function HomePage() {
               />
             </div>
 
-            <OptionsForm
-              idPrefix="home"
-              language={language}
-              difficulty={difficulty}
-              onLanguage={setLanguage}
-              onDifficulty={setDifficulty}
+            <Picker
+              label="La palabra"
+              layoutId="home-source"
+              value={wordSource}
+              onChange={setWordSource}
+              options={[
+                { value: 'list', label: 'Al azar', hint: 'la elige el juego' },
+                { value: 'player', label: 'La pongo yo', hint: 'y la adivinan' },
+              ]}
             />
 
-            <button
-              type="button"
-              className="btn-primary w-full"
-              onClick={createRoom}
-              disabled={busy !== null}
-            >
-              {busy === 'create' ? 'Creando sala...' : 'Crear sala'}
-            </button>
+            {wordSource === 'list' && (
+              <OptionsForm
+                idPrefix="home"
+                language={language}
+                difficulty={difficulty}
+                onLanguage={setLanguage}
+                onDifficulty={setDifficulty}
+              />
+            )}
+
+            {wordSource === 'player' ? (
+              <WordInput
+                label="Tu palabra secreta"
+                submitLabel="Crear sala"
+                busy={busy === 'create'}
+                onSubmit={(word) => createRoom(word)}
+              />
+            ) : (
+              <button
+                type="button"
+                className="btn-primary w-full"
+                onClick={() => createRoom()}
+                disabled={busy !== null}
+              >
+                {busy === 'create' ? 'Creando sala...' : 'Crear sala'}
+              </button>
+            )}
 
             <div className="flex items-center gap-3">
               <span className="h-px flex-1 bg-white/10" />

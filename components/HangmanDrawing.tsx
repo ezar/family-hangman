@@ -1,10 +1,11 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { MAX_WRONG } from '@/lib/gameLogic';
+import { partsToDraw } from '@/lib/gameLogic';
 
 interface Props {
   wrongCount: number;
+  maxWrong: number;
   lost?: boolean;
 }
 
@@ -24,10 +25,10 @@ const draw = {
   },
 };
 
-export default function HangmanDrawing({ wrongCount, lost = false }: Props) {
-  const shown = Math.min(wrongCount, MAX_WRONG);
+export default function HangmanDrawing({ wrongCount, maxWrong, lost = false }: Props) {
+  const shown = partsToDraw(wrongCount, maxWrong);
   // El trazo se calienta hacia el rojo segun se acerca el final.
-  const stroke = lost ? '#ff6b6b' : shown >= MAX_WRONG - 1 ? '#ff9f68' : '#ffbb38';
+  const stroke = lost ? '#ff6b6b' : wrongCount >= maxWrong - 1 ? '#ff9f68' : '#ffbb38';
 
   const anim = { variants: draw, initial: 'hidden' as const, animate: 'visible' as const };
   const limb = { ...STROKE, ...anim, stroke, strokeWidth: 7 };
@@ -46,7 +47,7 @@ export default function HangmanDrawing({ wrongCount, lost = false }: Props) {
       viewBox="0 0 200 200"
       className="h-full w-full drop-shadow-[0_10px_28px_rgba(0,0,0,0.5)]"
       role="img"
-      aria-label={`Fallos: ${shown} de ${MAX_WRONG}`}
+      aria-label={`Fallos: ${wrongCount} de ${maxWrong}`}
     >
       {/* Sombra en el suelo: asienta la horca en lugar de dejarla flotando. */}
       <ellipse cx="54" cy="190" rx="42" ry="6" fill="rgba(0,0,0,0.35)" />

@@ -1,4 +1,4 @@
-import { createGame, generateRoomCode } from '@/lib/gameLogic';
+import { createGame, generateRoomCode, normalizeCustomWord } from '@/lib/gameLogic';
 import { createGameIfAbsent } from '@/lib/redis';
 import { isDifficulty, isLanguage } from '@/lib/types';
 import { randomWord } from '@/lib/words';
@@ -11,6 +11,19 @@ export async function POST(request: Request) {
   const language = isLanguage(body.language) ? body.language : 'es';
   const difficulty = isDifficulty(body.difficulty) ? body.difficulty : 'familiar';
   const hostName = cleanName(body.name);
+  const wordSource = body.wordSource === 'player' ? 'player' : 'list';
+
+  // En una sala de palabra propia, quien crea la sala la escribe al vuelo.
+  let word: string;
+  if (wordSource === 'player') {
+    const custom = normalizeCustomWord(body.word);
+    if (!custom) {
+      return jsonError('La palabra debe tener entre 3 y 20 letras, sin espacios ni numeros', 400);
+    }
+    word = custom;
+  } else {
+    word = randomWord(language, difficulty);
+  }
 
   try {
     // Codigos de 4 caracteres chocan de vez en cuando: reintentamos con NX.
@@ -19,8 +32,9 @@ export async function POST(request: Request) {
         roomCode: generateRoomCode(),
         language,
         difficulty,
-        word: randomWord(language, difficulty),
+        word,
         hostName,
+        wordSource,
       });
 
       if (await createGameIfAbsent(game)) {

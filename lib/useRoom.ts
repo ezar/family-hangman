@@ -15,7 +15,7 @@ async function request(path: string, init?: RequestInit) {
   const response = await fetch(path, init);
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error ?? 'No se pudo contactar con la sala');
-  return data as { game: PublicGame; correct?: boolean };
+  return data as { game: PublicGame; correct?: boolean; letter?: string };
 }
 
 /**
@@ -78,19 +78,40 @@ export function useRoom(roomCode: string, playerId: number | null) {
     [applyGame, playerId, roomCode],
   );
 
-  const restart = useCallback(async () => {
+  const hint = useCallback(async () => {
+    if (playerId === null) return;
     setActionError(null);
     try {
-      const data = await request('/api/restart', {
+      const data = await request('/api/hint', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ room: roomCode }),
+        body: JSON.stringify({ room: roomCode, playerId }),
       });
       applyGame(data.game);
     } catch (problem) {
-      setActionError(problem instanceof Error ? problem.message : 'No se pudo reiniciar');
+      setActionError(problem instanceof Error ? problem.message : 'No se pudo pedir la pista');
     }
-  }, [applyGame, roomCode]);
+  }, [applyGame, playerId, roomCode]);
 
-  return { ...state, actionError, guess, restart };
+  /** En una sala de palabra propia, quien la pone manda tambien la siguiente. */
+  const restart = useCallback(
+    async (word?: string) => {
+      setActionError(null);
+      try {
+        const data = await request('/api/restart', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ room: roomCode, playerId, word }),
+        });
+        applyGame(data.game);
+        return true;
+      } catch (problem) {
+        setActionError(problem instanceof Error ? problem.message : 'No se pudo reiniciar');
+        return false;
+      }
+    },
+    [applyGame, playerId, roomCode],
+  );
+
+  return { ...state, actionError, guess, hint, restart };
 }
