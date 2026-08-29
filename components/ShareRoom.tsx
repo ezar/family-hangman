@@ -1,18 +1,20 @@
 'use client';
 
 import { useState } from 'react';
+import { useT } from './LanguageProvider';
 
 /** Codigo grande + copiar/compartir: es lo unico que hay que pasarle al resto. */
 export default function ShareRoom({ roomCode }: { roomCode: string }) {
+  const t = useT();
   const [copied, setCopied] = useState(false);
 
   async function share() {
     const url = `${window.location.origin}/room/${roomCode}`;
-    const text = `Juega al ahorcado conmigo. Sala ${roomCode}: ${url}`;
+    const text = `${t.shareRoomText(roomCode)}: ${url}`;
 
     if (navigator.share) {
       try {
-        await navigator.share({ title: 'Ahorcado en Familia', text, url });
+        await navigator.share({ title: t.appName, text, url });
         return;
       } catch {
         // Compartir cancelado: seguimos con el portapapeles.
@@ -35,7 +37,7 @@ export default function ShareRoom({ roomCode }: { roomCode: string }) {
       className="panel flex w-full items-center justify-between gap-4 p-4 text-left transition-colors hover:border-white/20"
     >
       <span className="flex flex-col gap-2">
-        <span className="label">Código de sala</span>
+        <span className="label">{t.roomCode}</span>
         {/* En fichas, igual que las letras del juego: la sala se lee de un vistazo. */}
         <span className="flex gap-1.5">
           {roomCode.split('').map((character, index) => (
@@ -50,7 +52,7 @@ export default function ShareRoom({ roomCode }: { roomCode: string }) {
         </span>
       </span>
       <span className="rounded-xl bg-white/[0.08] px-4 py-3 font-display text-sm">
-        {copied ? '¡Copiado!' : 'Compartir'}
+        {copied ? t.copied : t.share}
       </span>
     </button>
   );

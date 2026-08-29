@@ -1,6 +1,8 @@
 import { attemptGame, newAttemptId, normalizeChallengeCode } from '@/lib/challenge';
 import { toPublicGame } from '@/lib/gameLogic';
 import { readChallenge, writeAttempt } from '@/lib/redis';
+import { messagesFor } from '@/lib/i18n';
+import { isLanguage } from '@/lib/types';
 import { cleanName, jsonError, readBody, serviceError } from '@/lib/api';
 import { NextResponse } from 'next/server';
 
@@ -9,15 +11,16 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: Request) {
   const body = await readBody(request);
   const code = normalizeChallengeCode(body.code);
-  if (!code) return jsonError('Código de reto no válido', 400);
+  if (!code) return jsonError('Código de reto no válido', 400, 'bad-code');
 
   try {
     const challenge = await readChallenge(code);
-    if (!challenge) return jsonError('Ese reto no existe o ya ha caducado', 404);
+    if (!challenge) return jsonError('Ese reto no existe o ya ha caducado', 404, 'challenge-not-found');
 
     // Cada persona que abre el enlace juega su propio intento, en paralelo.
     const id = newAttemptId();
-    const game = attemptGame(challenge, cleanName(body.name));
+    const language = isLanguage(body.language) ? body.language : 'es';
+    const game = attemptGame(challenge, cleanName(body.name, messagesFor(language).defaultPlayer));
     await writeAttempt(id, game);
 
     return NextResponse.json({ attemptId: id, game: toPublicGame(game) });

@@ -13,6 +13,9 @@ export const LIVES_BY_DIFFICULTY: Record<Difficulty, number> = {
 /** El dibujo tiene seis piezas; con otras vidas se reparten proporcionalmente. */
 export const HANGMAN_PARTS = 6;
 
+/** Vidas de una partida guardada sin dificultad reconocible. */
+const MAX_WRONG_FALLBACK = 6;
+
 /** Comodines por ronda. */
 export const MAX_HINTS = 1;
 
@@ -285,6 +288,36 @@ export function createGame(params: {
     setterId: wordSource === 'player' ? 1 : null,
     hintsUsed: 0,
     scores: { ...EMPTY_SCORES },
+  };
+}
+
+/**
+ * Completa una partida guardada con los campos que quiza no tenga.
+ *
+ * Las salas viven horas en Redis, asi que tras un despliegue conviven blobs
+ * escritos por versiones anteriores del juego. Sin esto, una sala creada antes
+ * de que existiera el marcador rompe el cliente al leer `scores.wins`.
+ */
+export function normalizeGame(raw: Partial<Game> & Pick<Game, 'roomCode' | 'word'>): Game {
+  const difficulty = raw.difficulty ?? 'familiar';
+  return {
+    roomCode: raw.roomCode,
+    language: raw.language ?? 'es',
+    difficulty,
+    status: raw.status ?? 'waiting',
+    word: raw.word,
+    guessed: raw.guessed ?? [],
+    wrongCount: raw.wrongCount ?? 0,
+    maxWrong: raw.maxWrong ?? LIVES_BY_DIFFICULTY[difficulty] ?? MAX_WRONG_FALLBACK,
+    turnIndex: raw.turnIndex ?? 0,
+    players: raw.players ?? [],
+    nextId: raw.nextId ?? (raw.players?.length ?? 0) + 1,
+    wordSource: raw.wordSource ?? 'list',
+    setterId: raw.setterId ?? null,
+    hintsUsed: raw.hintsUsed ?? 0,
+    scores: raw.scores ?? { wins: 0, losses: 0, streak: 0 },
+    // Solo el modo tramposo lo usa: no se anade la clave si no venia.
+    ...(raw.candidatesLeft === undefined ? {} : { candidatesLeft: raw.candidatesLeft }),
   };
 }
 

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
+import { LanguageProvider, useT } from '@/components/LanguageProvider';
 import Logo from '@/components/Logo';
 import { ChallengeIcon, GroupIcon, SoloIcon } from '@/components/ModeIcon';
 import OptionsForm from '@/components/OptionsForm';
@@ -10,13 +11,27 @@ import Picker from '@/components/Picker';
 import WordInput from '@/components/WordInput';
 import { useGameStore } from '@/lib/gameStore';
 import { useHydratedStore } from '@/lib/useHydratedStore';
+import { localizeError } from '@/lib/apiError';
 import { normalizeRoomCode } from '@/lib/gameLogic';
 
 type Panel = 'menu' | 'group';
 
 export default function HomePage() {
-  const router = useRouter();
   const hydrated = useHydratedStore();
+  const language = useGameStore((state) => state.language);
+
+  // Antes de hidratar no sabemos el idioma guardado: el castellano por defecto
+  // evita que el servidor y el navegador pinten cosas distintas.
+  return (
+    <LanguageProvider language={hydrated ? language : 'es'}>
+      <Home hydrated={hydrated} />
+    </LanguageProvider>
+  );
+}
+
+function Home({ hydrated }: { hydrated: boolean }) {
+  const t = useT();
+  const router = useRouter();
   const { name, language, difficulty, setName, setLanguage, setDifficulty, rememberIdentity } =
     useGameStore();
 
@@ -33,7 +48,7 @@ export default function HomePage() {
       body: JSON.stringify(body),
     });
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error ?? 'Algo ha ido mal');
+    if (!response.ok) throw new Error(localizeError(t, data, t.somethingWrong));
     return data as { game: { roomCode: string }; playerId: number };
   }
 
@@ -45,7 +60,7 @@ export default function HomePage() {
       rememberIdentity({ roomCode: data.game.roomCode, playerId: data.playerId });
       router.push(`/room/${data.game.roomCode}`);
     } catch (problem) {
-      setError(problem instanceof Error ? problem.message : 'Algo ha ido mal');
+      setError(problem instanceof Error ? problem.message : t.somethingWrong);
       setBusy(null);
     }
   }
@@ -53,7 +68,7 @@ export default function HomePage() {
   async function joinRoom() {
     const roomCode = normalizeRoomCode(code);
     if (!roomCode) {
-      setError('Escribe el código de la sala');
+      setError(t.writeRoomCode);
       return;
     }
 
@@ -64,7 +79,7 @@ export default function HomePage() {
       rememberIdentity({ roomCode, playerId: data.playerId });
       router.push(`/room/${roomCode}`);
     } catch (problem) {
-      setError(problem instanceof Error ? problem.message : 'Algo ha ido mal');
+      setError(problem instanceof Error ? problem.message : t.somethingWrong);
       setBusy(null);
     }
   }
@@ -91,22 +106,22 @@ export default function HomePage() {
           >
             <ModeCard
               icon={<SoloIcon className="h-11 w-11 text-honey" />}
-              title="Jugar solo"
-              description="Tú contra la palabra. Sin sala y sin esperar a nadie."
+              title={t.playSolo}
+              description={t.playSoloHint}
               accent="from-honey/30"
               onClick={() => router.push('/solo')}
             />
             <ModeCard
               icon={<GroupIcon className="h-11 w-11 text-grape" />}
-              title="Partida grupal"
-              description="Crea una sala, comparte el código y jugad por turnos."
+              title={t.playGroup}
+              description={t.playGroupHint}
               accent="from-grape/30"
               onClick={() => setPanel('group')}
             />
             <ModeCard
               icon={<ChallengeIcon className="h-11 w-11 text-coral" />}
-              title="Retar a alguien"
-              description="Pon una palabra y manda el enlace por donde quieras."
+              title={t.playChallenge}
+              description={t.playChallengeHint}
               accent="from-coral/30"
               onClick={() => router.push('/reto')}
             />
@@ -122,12 +137,12 @@ export default function HomePage() {
           >
             <div className="flex flex-col gap-2">
               <label className="label" htmlFor="player-name">
-                Tu nombre
+                {t.yourName}
               </label>
               <input
                 id="player-name"
                 className="field"
-                placeholder="¿Cómo te llaman en casa?"
+                placeholder={t.yourNamePlaceholder}
                 maxLength={16}
                 value={hydrated ? name : ''}
                 onChange={(event) => setName(event.target.value)}
@@ -135,14 +150,14 @@ export default function HomePage() {
             </div>
 
             <Picker
-              label="La palabra"
+              label={t.theWord}
               layoutId="home-source"
               value={wordSource}
               onChange={setWordSource}
               options={[
-                { value: 'list', label: 'Al azar', hint: 'la elige el juego' },
-                { value: 'player', label: 'La pongo yo', hint: 'y la adivinan' },
-                { value: 'evil', label: 'Tramposo', hint: 'os esquiva' },
+                { value: 'list', label: t.wordRandom, hint: t.wordRandomHint },
+                { value: 'player', label: t.wordMine, hint: t.wordMineHint },
+                { value: 'evil', label: t.wordEvil, hint: t.wordEvilHint },
               ]}
             />
 
@@ -158,15 +173,14 @@ export default function HomePage() {
 
             {wordSource === 'evil' && (
               <p className="rounded-xl border border-grape/30 bg-grape/10 px-4 py-3 text-center text-xs text-grape">
-                No habrá palabra elegida: el juego irá cambiándola para esquivaros mientras
-                pueda. Sin pistas.
+                {t.evilWarning}
               </p>
             )}
 
             {wordSource === 'player' ? (
               <WordInput
-                label="Tu palabra secreta"
-                submitLabel="Crear sala"
+                label={t.yourSecretWord}
+                submitLabel={t.createRoom}
                 busy={busy === 'create'}
                 onSubmit={(word) => createRoom(word)}
               />
@@ -177,20 +191,20 @@ export default function HomePage() {
                 onClick={() => createRoom()}
                 disabled={busy !== null}
               >
-                {busy === 'create' ? 'Creando sala...' : 'Crear sala'}
+                {busy === 'create' ? t.creatingRoom : t.createRoom}
               </button>
             )}
 
             <div className="flex items-center gap-3">
               <span className="h-px flex-1 bg-white/10" />
-              <span className="label">o únete</span>
+              <span className="label">{t.orJoin}</span>
               <span className="h-px flex-1 bg-white/10" />
             </div>
 
             <div className="flex gap-2">
               <input
                 className="field flex-1 text-center uppercase tracking-[0.4em]"
-                placeholder="CÓDIGO"
+                placeholder={t.codePlaceholder}
                 maxLength={8}
                 value={code}
                 onChange={(event) => setCode(event.target.value.toUpperCase())}
@@ -202,7 +216,7 @@ export default function HomePage() {
                 onClick={joinRoom}
                 disabled={busy !== null}
               >
-                {busy === 'join' ? '...' : 'Entrar'}
+                {busy === 'join' ? '...' : t.enter}
               </button>
             </div>
 
@@ -217,14 +231,14 @@ export default function HomePage() {
               className="text-sm text-cream/40 underline-offset-4 hover:underline"
               onClick={() => setPanel('menu')}
             >
-              Volver
+              {t.back}
             </button>
           </motion.div>
         )}
       </AnimatePresence>
 
       <ul className="flex items-center justify-center gap-2 text-[0.7rem] text-cream/30">
-        {['Sin instalar nada', 'Español e inglés', '3 niveles'].map((feature) => (
+        {[t.featureNoInstall, t.featureLanguages, t.featureLevels].map((feature) => (
           <li key={feature} className="rounded-full border border-white/10 px-3 py-1.5">
             {feature}
           </li>

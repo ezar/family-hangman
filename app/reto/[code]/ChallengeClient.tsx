@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import Board from '@/components/Board';
 import EffectToggles from '@/components/EffectToggles';
+import { LanguageProvider, useLanguage, useT } from '@/components/LanguageProvider';
 import Logo from '@/components/Logo';
 import ResultOverlay from '@/components/ResultOverlay';
 import ResultsTable from '@/components/ResultsTable';
@@ -12,12 +13,27 @@ import ShareLink from '@/components/ShareLink';
 import { MAX_HINTS, remainingLives } from '@/lib/gameLogic';
 import { useGameStore } from '@/lib/gameStore';
 import { useFeedback } from '@/lib/useFeedback';
+import { localizeError } from '@/lib/apiError';
 import { useHydratedStore } from '@/lib/useHydratedStore';
 import type { PublicChallenge } from '@/lib/challenge';
 import type { PublicGame } from '@/lib/types';
 
 export default function ChallengeClient({ code }: { code: string }) {
   const hydrated = useHydratedStore();
+  const language = useGameStore((state) => state.language);
+
+  // Un reto no tiene idioma propio: la palabra la escribe una persona, no sale
+  // de una lista. Cada quien lo lee en el suyo.
+  return (
+    <LanguageProvider language={hydrated ? language : 'es'}>
+      <Challenge code={code} hydrated={hydrated} />
+    </LanguageProvider>
+  );
+}
+
+function Challenge({ code, hydrated }: { code: string; hydrated: boolean }) {
+  const t = useT();
+  const language = useLanguage();
   const { name, setName, attempts, rememberAttempt, myChallenges } = useGameStore();
 
   const [challenge, setChallenge] = useState<PublicChallenge | null>(null);
@@ -33,12 +49,12 @@ export default function ChallengeClient({ code }: { code: string }) {
     try {
       const response = await fetch(`/api/challenge/info?code=${encodeURIComponent(code)}`);
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? 'No se pudo cargar el reto');
+      if (!response.ok) throw new Error(localizeError(t, data, t.somethingWrong));
       setChallenge(data.challenge);
     } catch (problem) {
-      setError(problem instanceof Error ? problem.message : 'No se pudo cargar el reto');
+      setError(problem instanceof Error ? problem.message : t.somethingWrong);
     }
-  }, [code]);
+  }, [code, t]);
 
   useEffect(() => {
     loadChallenge();
@@ -54,7 +70,7 @@ export default function ChallengeClient({ code }: { code: string }) {
           body: JSON.stringify({ code, attemptId, ...body }),
         });
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error ?? 'No se pudo jugar');
+        if (!response.ok) throw new Error(localizeError(t, data, t.somethingWrong));
 
         const next = data.game as PublicGame;
         setGame((current) => {
@@ -74,10 +90,10 @@ export default function ChallengeClient({ code }: { code: string }) {
         // Al terminar, la tabla ya tiene una fila mas.
         if (next.status === 'won' || next.status === 'lost') void loadChallenge();
       } catch (problem) {
-        setError(problem instanceof Error ? problem.message : 'No se pudo jugar');
+        setError(problem instanceof Error ? problem.message : t.somethingWrong);
       }
     },
-    [attemptId, code, feedback, loadChallenge],
+    [attemptId, code, feedback, loadChallenge, t],
   );
 
   async function start() {
@@ -87,14 +103,14 @@ export default function ChallengeClient({ code }: { code: string }) {
       const response = await fetch('/api/challenge/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, name }),
+        body: JSON.stringify({ code, name, language }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? 'No se pudo empezar');
+      if (!response.ok) throw new Error(localizeError(t, data, t.somethingWrong));
       rememberAttempt(code, data.attemptId);
       setGame(data.game);
     } catch (problem) {
-      setError(problem instanceof Error ? problem.message : 'No se pudo empezar');
+      setError(problem instanceof Error ? problem.message : t.somethingWrong);
     } finally {
       setBusy(false);
     }
@@ -107,11 +123,11 @@ export default function ChallengeClient({ code }: { code: string }) {
           <>
             <p className="text-coral">{error}</p>
             <Link href="/" className="btn-ghost">
-              Volver al inicio
+              {t.backHome}
             </Link>
           </>
         ) : (
-          <p className="text-cream/50">Cargando el reto...</p>
+          <p className="text-cream/50">{t.loadingChallenge}</p>
         )}
       </main>
     );
@@ -129,25 +145,25 @@ export default function ChallengeClient({ code }: { code: string }) {
           className="panel flex flex-col gap-4 p-5 text-center"
         >
           <p className="font-display text-2xl leading-tight">
-            {mine ? 'Tu reto' : `${challenge.authorName} te reta`}
+            {mine ? t.yourChallenge : t.challengesYou(challenge.authorName)}
           </p>
           <p className="text-sm text-cream/50">
-            Una palabra de{' '}
+            {t.aWordOf}{' '}
             <strong className="font-display text-lg text-honey">{challenge.wordLength}</strong>{' '}
-            letras.
+            {t.wordOfLetters}
           </p>
 
           {!mine && (
             <>
               <input
                 className="field text-center"
-                placeholder="Tu nombre"
+                placeholder={t.yourName}
                 maxLength={16}
                 value={hydrated ? name : ''}
                 onChange={(event) => setName(event.target.value)}
               />
               <button type="button" className="btn-primary w-full" onClick={start} disabled={busy}>
-                {busy ? 'Preparando...' : 'Aceptar el reto'}
+                {busy ? t.preparing : t.acceptChallenge}
               </button>
             </>
           )}
@@ -155,8 +171,8 @@ export default function ChallengeClient({ code }: { code: string }) {
           {mine && (
             <ShareLink
               path={`/reto/${code}`}
-              text={`Te reto: adivina mi palabra de ${challenge.wordLength} letras.`}
-              label="Compartir otra vez"
+              text={t.challengeText(challenge.wordLength)}
+              label={t.shareAgain}
             />
           )}
 
@@ -164,16 +180,16 @@ export default function ChallengeClient({ code }: { code: string }) {
         </motion.div>
 
         <div className="panel flex flex-col gap-3 p-5">
-          <p className="label text-center">Quién lo ha intentado</p>
+          <p className="label text-center">{t.whoTriedIt}</p>
           <ResultsTable results={challenge.results} />
         </div>
 
         <div className="flex flex-col gap-2 text-center">
           <Link href="/reto" className="text-sm text-honey/70 hover:underline">
-            Crear mi propio reto
+            {t.createMyChallenge}
           </Link>
           <Link href="/" className="text-sm text-cream/40 hover:underline">
-            Volver al inicio
+            {t.backHome}
           </Link>
         </div>
       </main>
@@ -187,7 +203,7 @@ export default function ChallengeClient({ code }: { code: string }) {
     <main className="flex flex-1 flex-col gap-3 py-4">
       <header className="flex items-center justify-between gap-2">
         <Link href="/" className="text-sm text-cream/40 hover:text-cream/70">
-          ← Salir
+          ← {t.leave}
         </Link>
         <Logo compact />
         <EffectToggles hydrated={hydrated} />
@@ -210,7 +226,7 @@ export default function ChallengeClient({ code }: { code: string }) {
         banner={
           <div className="flex flex-col items-center gap-1">
             <p className="text-center text-sm text-cream/45">
-              La palabra de {challenge.authorName}
+              {t.theWordOf(challenge.authorName)}
             </p>
             {error && <p className="text-sm text-coral">{error}</p>}
           </div>
@@ -220,16 +236,16 @@ export default function ChallengeClient({ code }: { code: string }) {
       <ResultOverlay
         status={finished}
         word={game.word}
-        winTitle="¡Lo adivinaste!"
+        winTitle={t.youGuessedIt}
         onAction={undefined}
         secondary={
           <div className="flex flex-col gap-3">
             {/* El bucle se cierra aqui: quien acaba de jugar crea el suyo. */}
             <Link href="/reto" className="btn-ghost w-full">
-              Ahora reta tú
+              {t.challengeNowYou}
             </Link>
             <Link href={`/reto/${code}`} className="text-sm text-cream/40 hover:underline">
-              Ver la tabla del reto
+              {t.seeChallengeTable}
             </Link>
           </div>
         }

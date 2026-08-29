@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useT } from './LanguageProvider';
 
 const ROWS = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'].map((row) => row.split(''));
 
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export default function Keyboard({ guessed, hits, disabled = false, onGuess }: Props) {
+  const t = useT();
   // Teclado fisico para quien juegue desde el ordenador.
   useEffect(() => {
     if (disabled) return undefined;
@@ -31,7 +33,7 @@ export default function Keyboard({ guessed, hits, disabled = false, onGuess }: P
   }, [disabled, guessed, onGuess]);
 
   return (
-    <div className="flex flex-col items-center gap-1.5 select-none" role="group" aria-label="Teclado">
+    <div className="flex flex-col items-center gap-1.5 select-none" role="group" aria-label={t.keyboard}>
       {ROWS.map((row, rowIndex) => (
         <div key={rowIndex} className="flex w-full justify-center gap-1.5">
           {row.map((letter) => {

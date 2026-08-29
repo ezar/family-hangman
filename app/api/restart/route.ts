@@ -9,14 +9,14 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: Request) {
   const body = await readBody(request);
   const roomCode = normalizeRoomCode(body.room);
-  if (!roomCode) return jsonError('Código de sala no válido', 400);
+  if (!roomCode) return jsonError('Código de sala no válido', 400, 'bad-code');
 
   try {
     const game = await readGame(roomCode);
-    if (!game) return jsonError('Esa sala no existe o ya ha caducado', 404);
+    if (!game) return jsonError('Esa sala no existe o ya ha caducado', 404, 'room-not-found');
 
     if (game.status === 'playing') {
-      return jsonError('La partida sigue en juego', 409);
+      return jsonError('La partida sigue en juego', 409, 'still-playing');
     }
 
     let word: string;
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       }
       const custom = normalizeCustomWord(body.word);
       if (!custom) {
-        return jsonError('La palabra debe tener entre 3 y 20 letras, sin espacios ni numeros', 400);
+        return jsonError('La palabra debe tener entre 3 y 20 letras, sin espacios ni números', 400, 'bad-word');
       }
       word = custom;
     } else {

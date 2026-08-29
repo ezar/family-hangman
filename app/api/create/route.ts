@@ -3,6 +3,7 @@ import { createGame, generateRoomCode, normalizeCustomWord } from '@/lib/gameLog
 import { createGameIfAbsent } from '@/lib/redis';
 import { isDifficulty, isLanguage } from '@/lib/types';
 import { randomWord, wordList } from '@/lib/words';
+import { messagesFor } from '@/lib/i18n';
 import { cleanName, gameResponse, jsonError, readBody, serviceError } from '@/lib/api';
 
 export const dynamic = 'force-dynamic';
@@ -11,7 +12,7 @@ export async function POST(request: Request) {
   const body = await readBody(request);
   const language = isLanguage(body.language) ? body.language : 'es';
   const difficulty = isDifficulty(body.difficulty) ? body.difficulty : 'familiar';
-  const hostName = cleanName(body.name);
+  const hostName = cleanName(body.name, messagesFor(language).defaultPlayer);
   const wordSource =
     body.wordSource === 'player' || body.wordSource === 'evil' ? body.wordSource : 'list';
 
@@ -22,7 +23,7 @@ export async function POST(request: Request) {
     // En una sala de palabra propia, quien crea la sala la escribe al vuelo.
     const custom = normalizeCustomWord(body.word);
     if (!custom) {
-      return jsonError('La palabra debe tener entre 3 y 20 letras, sin espacios ni números', 400);
+      return jsonError('La palabra debe tener entre 3 y 20 letras, sin espacios ni números', 400, 'bad-word');
     }
     word = custom;
   } else if (wordSource === 'evil') {

@@ -82,6 +82,15 @@
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
   }
 
+  /*
+   * Instalada como PWA, la pagina se dibuja de borde a borde y pasa por debajo
+   * de la barra de estado y del indicador inferior. Estos margenes devuelven
+   * el contenido a la zona visible sin renunciar al fondo a pantalla completa.
+   */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
   .safe-bottom {
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }

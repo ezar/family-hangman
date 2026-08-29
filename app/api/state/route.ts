@@ -7,11 +7,11 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const roomCode = normalizeRoomCode(searchParams.get('room'));
-  if (!roomCode) return jsonError('Código de sala no válido', 400);
+  if (!roomCode) return jsonError('Código de sala no válido', 400, 'bad-code');
 
   try {
     const game = await readGame(roomCode);
-    if (!game) return jsonError('Esa sala no existe o ya ha caducado', 404);
+    if (!game) return jsonError('Esa sala no existe o ya ha caducado', 404, 'room-not-found');
     return gameResponse(game);
   } catch (error) {
     return serviceError(error);

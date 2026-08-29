@@ -6,6 +6,7 @@ import HangmanDrawing from './HangmanDrawing';
 import Keyboard from './Keyboard';
 import LivesMeter from './LivesMeter';
 import WordDisplay from './WordDisplay';
+import { useT } from './LanguageProvider';
 
 interface Props {
   masked: (string | null)[];
@@ -37,6 +38,7 @@ export default function Board({
   banner,
   reveal,
 }: Props) {
+  const t = useT();
   // Cada fallo nuevo sacude el tablero: el aviso llega antes que el dibujo.
   const [shakes, setShakes] = useState(0);
   const previousWrong = useRef(wrongCount);
@@ -80,7 +82,7 @@ export default function Board({
               <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2Z" />
               </svg>
-              Pista
+              {t.hint}
             </button>
           )}
 

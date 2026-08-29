@@ -1,17 +1,20 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
+import { useT } from './LanguageProvider';
 
 /**
  * Cuantas palabras siguen encajando. Es el termometro del modo tramposo: ver
  * el numero caer de 180 a 3 es la mitad de la gracia.
  */
 export default function CandidateCount({ count }: { count?: number }) {
+  const t = useT();
+
   if (count === undefined) return null;
 
   return (
     <div className="flex items-center justify-center gap-2 text-xs">
-      <span className="text-cream/35">Aún encajan</span>
+      <span className="text-cream/35">{t.stillFit}</span>
       <AnimatePresence mode="popLayout">
         <motion.span
           key={count}
@@ -26,7 +29,7 @@ export default function CandidateCount({ count }: { count?: number }) {
           {count}
         </motion.span>
       </AnimatePresence>
-      <span className="text-cream/35">{count === 1 ? 'palabra' : 'palabras'}</span>
+      <span className="text-cream/35">{t.wordsPlural(count)}</span>
     </div>
   );
 }

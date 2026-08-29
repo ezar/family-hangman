@@ -1,4 +1,5 @@
 import { Redis } from '@upstash/redis';
+import { normalizeGame } from './gameLogic';
 import { missingCredentialsMessage, resolveRedisCredentials } from './redisEnv';
 import type { AttemptResult, Challenge } from './challenge';
 import type { Game } from './types';
@@ -31,7 +32,9 @@ export function gameKey(roomCode: string): string {
 }
 
 export async function readGame(roomCode: string): Promise<Game | null> {
-  return parse<Game>(await getRedis().get<Game | string>(gameKey(roomCode)));
+  const raw = parse<Game>(await getRedis().get<Game | string>(gameKey(roomCode)));
+  // Puede venir de una version anterior del juego: se completa al leerla.
+  return raw ? normalizeGame(raw) : null;
 }
 
 export async function writeGame(game: Game): Promise<void> {
@@ -93,7 +96,8 @@ export async function readResults(code: string): Promise<AttemptResult[]> {
 }
 
 export async function readAttempt(id: string): Promise<Game | null> {
-  return parse<Game>(await getRedis().get<Game | string>(attemptKey(id)));
+  const raw = parse<Game>(await getRedis().get<Game | string>(attemptKey(id)));
+  return raw ? normalizeGame(raw) : null;
 }
 
 export async function writeAttempt(id: string, game: Game): Promise<void> {
