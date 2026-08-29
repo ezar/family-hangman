@@ -51,4 +51,5 @@ export const ATTEMPT_ERRORS: Record<string, { message: string; status: number }>
   'no-hints-left': { message: 'Ya has gastado la pista', status: 409 },
   'last-life': { message: 'Con una sola vida la pista no está disponible', status: 409 },
   'nothing-to-reveal': { message: 'No queda ninguna letra por descubrir', status: 409 },
+  'hints-disabled': { message: 'El tramposo no da pistas', status: 409 },
 };

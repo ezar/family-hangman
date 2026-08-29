@@ -1,4 +1,6 @@
+import { applyEvilGuess } from '@/lib/evil';
 import { applyGuess, normalizeRoomCode, type GuessError } from '@/lib/gameLogic';
+import { wordList } from '@/lib/words';
 import { readGame, writeGame } from '@/lib/redis';
 import { gameResponse, jsonError, readBody, serviceError } from '@/lib/api';
 
@@ -24,7 +26,11 @@ export async function POST(request: Request) {
     const game = await readGame(roomCode);
     if (!game) return jsonError('Esa sala no existe o ya ha caducado', 404);
 
-    const result = applyGuess(game, playerId, String(body.letter ?? ''));
+    const letter = String(body.letter ?? '');
+    const result =
+      game.wordSource === 'evil'
+        ? applyEvilGuess(game, playerId, letter, wordList(game.language, game.difficulty))
+        : applyGuess(game, playerId, letter);
     if (!result.ok) {
       const { message, status } = ERRORS[result.error];
       return jsonError(message, status);

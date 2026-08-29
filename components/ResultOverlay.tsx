@@ -16,6 +16,8 @@ interface Props {
   /** En solitario se gana en singular; en sala, en plural. */
   winTitle?: string;
   scores?: Scores;
+  /** En el modo tramposo, la confesion: no habia palabra elegida. */
+  evil?: boolean;
   /** Contenido extra antes del boton (por ejemplo, pedir la palabra siguiente). */
   children?: React.ReactNode;
 }
@@ -29,6 +31,7 @@ export default function ResultOverlay({
   secondary,
   winTitle = '¡Ganasteis!',
   scores,
+  evil = false,
   children,
 }: Props) {
   const won = status === 'won';
@@ -72,10 +75,17 @@ export default function ResultOverlay({
 
             {word && (
               <p className="mt-3 text-sm text-cream/55">
-                La palabra era{' '}
+                {evil ? 'Acabó siendo' : 'La palabra era'}{' '}
                 <strong className="font-display text-lg uppercase tracking-widest text-cream">
                   {word}
                 </strong>
+              </p>
+            )}
+
+            {evil && (
+              <p className="mt-4 rounded-xl border border-grape/30 bg-grape/10 px-4 py-3 text-sm text-grape">
+                No había ninguna palabra elegida: el juego iba cambiándola sobre la marcha
+                entre todas las que encajaban con tus respuestas.
               </p>
             )}
 

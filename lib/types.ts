@@ -1,8 +1,12 @@
 export type Language = 'es' | 'en';
 export type Difficulty = 'infantil' | 'familiar' | 'experto';
 export type GameStatus = 'waiting' | 'playing' | 'won' | 'lost';
-/** De donde sale la palabra: del banco, o de un jugador que la escribe. */
-export type WordSource = 'list' | 'player';
+/**
+ * De donde sale la palabra: del banco, de un jugador que la escribe, o de
+ * ningun sitio, porque en el modo tramposo no hay palabra elegida hasta el
+ * final: el juego va esquivando entre todas las que siguen encajando.
+ */
+export type WordSource = 'list' | 'player' | 'evil';
 
 export const LANGUAGES: Language[] = ['es', 'en'];
 export const DIFFICULTIES: Difficulty[] = ['infantil', 'familiar', 'experto'];
@@ -39,6 +43,8 @@ export interface Game {
   setterId: number | null;
   /** Comodines gastados en la ronda actual. */
   hintsUsed: number;
+  /** Solo en el modo tramposo: cuantas palabras siguen siendo posibles. */
+  candidatesLeft?: number;
   scores: Scores;
 }
 

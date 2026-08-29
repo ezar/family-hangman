@@ -117,8 +117,12 @@ function nextScores(scores: Scores, status: Game['status']): Scores {
   return scores;
 }
 
-/** Cierra el intento: recalcula estado, marcador y turno de una sola vez. */
-function resolveAttempt(game: Game, guessed: string[], wrongCount: number): Game {
+/**
+ * Cierra el intento: recalcula estado, marcador y turno de una sola vez. La
+ * comparte el modo normal con el tramposo, que solo cambia como se decide si
+ * la letra estaba o no.
+ */
+export function resolveAttempt(game: Game, guessed: string[], wrongCount: number): Game {
   let status: Game['status'] = 'playing';
   if (isWordComplete(game.word, guessed)) {
     status = 'won';
@@ -184,7 +188,12 @@ export function applyGuess(game: Game, playerId: number, rawLetter: string): Gue
   };
 }
 
-export type HintError = GuessError | 'no-hints-left' | 'last-life' | 'nothing-to-reveal';
+export type HintError =
+  | GuessError
+  | 'no-hints-left'
+  | 'last-life'
+  | 'nothing-to-reveal'
+  | 'hints-disabled';
 
 export type HintResult =
   | { ok: true; game: Game; letter: string }
@@ -211,6 +220,9 @@ export function applyHint(
   if (!active) return { ok: false, error: 'unknown-player' };
   if (active.id !== playerId) return { ok: false, error: 'not-your-turn' };
 
+  // El tramposo no da pistas: revelar una letra seria comprometerse con una
+  // palabra, que es justo lo que ese modo no hace.
+  if (game.wordSource === 'evil') return { ok: false, error: 'hints-disabled' };
   if (game.hintsUsed >= MAX_HINTS) return { ok: false, error: 'no-hints-left' };
   if (remainingLives(game) <= 1) return { ok: false, error: 'last-life' };
 

@@ -1,6 +1,7 @@
+import { evilStart } from '@/lib/evil';
 import { normalizeCustomWord, normalizeRoomCode, restartGame } from '@/lib/gameLogic';
 import { readGame, writeGame } from '@/lib/redis';
-import { randomWord } from '@/lib/words';
+import { randomWord, wordList } from '@/lib/words';
 import { gameResponse, jsonError, readBody, serviceError } from '@/lib/api';
 
 export const dynamic = 'force-dynamic';
@@ -19,7 +20,14 @@ export async function POST(request: Request) {
     }
 
     let word: string;
-    if (game.wordSource === 'player') {
+    let candidatesLeft: number | undefined;
+
+    if (game.wordSource === 'evil') {
+      const start = evilStart(wordList(game.language, game.difficulty));
+      if (!start) return jsonError('No hay palabras suficientes para otra ronda', 400);
+      word = start.word;
+      candidatesLeft = start.candidatesLeft;
+    } else if (game.wordSource === 'player') {
       // Solo quien pone la palabra puede abrir la ronda siguiente, y tiene
       // que traer una nueva: nadie mas conoce ni elige la palabra.
       const playerId = typeof body.playerId === 'number' ? body.playerId : null;
@@ -36,7 +44,7 @@ export async function POST(request: Request) {
       word = randomWord(game.language, game.difficulty, game.word);
     }
 
-    const next = restartGame(game, word);
+    const next = { ...restartGame(game, word), candidatesLeft };
     await writeGame(next);
     return gameResponse(next);
   } catch (error) {

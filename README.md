@@ -9,6 +9,11 @@ dificultad.
 - **Partida grupal** — se crea una sala con código de 4 caracteres, se comparte
   el enlace y se juega por turnos desde cualquier móvil. La palabra puede salir
   del banco o **ponerla un jugador**, que entonces mira sin jugar.
+- **Modo tramposo** — el ahorcado que no elige palabra. Mantiene todas las que
+  siguen encajando con tus respuestas y, en cada letra, se queda con el grupo
+  más numeroso: es decir, te esquiva mientras pueda. No puede mentir (la
+  palabra final siempre es coherente con todo lo respondido), pero tampoco se
+  compromete hasta que no le queda más remedio. Disponible en solo y en sala.
 - **Reto por enlace** — escribes una palabra y te llevas un enlace. Quien lo
   abre juega tu palabra al momento, sin sala, sin esperar a nadie y sin
   instalar nada. Pueden jugarlo muchas personas por separado, y quien lo creó
@@ -34,6 +39,8 @@ por igual la API route del modo grupal y el modo solo en el navegador.
   turno. No está disponible con una sola vida, para que la ayuda no sea justo
   lo que acabe con la partida.
 - Quien pone la palabra no juega turnos ni gasta pistas.
+- El modo tramposo no da pistas: revelar una letra sería comprometerse con una
+  palabra, que es justo lo que ese modo no hace.
 - El **marcador** de la sala (ganadas, perdidas y racha) sobrevive entre rondas.
 - No se puede jugar fuera de turno ni repetir una letra ya probada.
 - La palabra nunca viaja al cliente mientras se juega: la API envía solo la
@@ -98,6 +105,11 @@ Las salas caducan a las 12 horas para no acumular basura en Redis.
 | `npm run typecheck`| TypeScript sin emitir                        |
 | `npm test`         | Tests de la lógica pura y de las listas       |
 
+Los tests cargan el TypeScript con el stripper de Node 22 y un enganche de
+resolución (`tests/ts-resolver.mjs`) que añade la extensión a los imports
+relativos, para que el código de la aplicación no tenga que escribirse de una
+forma concreta solo por los tests.
+
 ## Estructura
 
 ```
@@ -112,6 +124,7 @@ components/             tablero, teclado, dibujo, overlays
 lib/
   gameLogic.ts          lógica pura: turnos, victoria y derrota
   challenge.ts          retos por enlace: código, intento y tabla
+  evil.ts               modo tramposo: huellas, candidatas y grupo elegido
   redis.ts              cliente de Upstash
   gameStore.ts          estado local del cliente (Zustand)
   useRoom.ts            polling del estado de la sala
