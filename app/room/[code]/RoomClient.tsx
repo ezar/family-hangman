@@ -18,6 +18,7 @@ import { useGameStore } from '@/lib/gameStore';
 import { useFeedback } from '@/lib/useFeedback';
 import { useHydratedStore } from '@/lib/useHydratedStore';
 import { localizeError } from '@/lib/apiError';
+import { useRecordGame } from '@/lib/useRecordGame';
 import { useRoom } from '@/lib/useRoom';
 import type { Language, PublicGame } from '@/lib/types';
 
@@ -49,6 +50,20 @@ function Room({
   const [joining, setJoining] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
   useRoomFeedback(game);
+
+  useRecordGame(
+    'room',
+    roomCode,
+    game ? game.scores.wins + game.scores.losses : 0,
+    game,
+    {
+      language: game?.language ?? 'es',
+      difficulty: game?.difficulty,
+      code: roomCode,
+      author: game?.players.find((player) => player.id === game.setterId)?.name,
+      evil: game?.wordSource === 'evil',
+    },
+  );
 
   // En cuanto llega el estado de la sala, la pantalla adopta su idioma.
   useEffect(() => {

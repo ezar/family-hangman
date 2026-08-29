@@ -17,7 +17,9 @@ dificultad.
 - **Reto por enlace** — escribes una palabra y te llevas un enlace. Quien lo
   abre juega tu palabra al momento, sin sala, sin esperar a nadie y sin
   instalar nada. Pueden jugarlo muchas personas por separado, y quien lo creó
-  ve la tabla de quién lo ha intentado y cómo le fue.
+  ve la tabla de quién lo ha intentado y cómo le fue. Cada persona lo juega
+  **una vez**: si vuelves al enlace, ves tu resultado en vez de poder repetir,
+  y si lo dejaste a medias lo retomas donde estaba.
 
 ## Cómo funciona
 
@@ -126,12 +128,14 @@ app/
   solo/page.tsx         ahorcado de un jugador, sin red
   room/[code]/          tablero de la partida grupal
   reto/                 crear un reto; reto/[code] jugarlo y ver la tabla
+  historial/            partidas jugadas y retos creados
   api/                  create · join · state · guess · hint · restart
-    challenge/          create · info · start · guess · hint
+    challenge/          create · info · start · guess · hint · mine
 components/             tablero, teclado, dibujo, overlays
 lib/
   gameLogic.ts          lógica pura: turnos, victoria y derrota
   challenge.ts          retos por enlace: código, intento y tabla
+  history.ts            historial local: identidad de ronda y cuentas
   evil.ts               modo tramposo: huellas, candidatas y grupo elegido
   redis.ts              cliente de Upstash
   gameStore.ts          estado local del cliente (Zustand)
@@ -139,6 +143,26 @@ lib/
   useFeedback.ts        sonido sintetizado y vibración, sin ficheros de audio
 data/words/             seis listas: {es,en} x {infantil,familiar,experto}
 ```
+
+## Historial
+
+Cada partida terminada se apunta en el navegador: en solitario, en sala y los
+retos que juegas. `/historial` las lista, con las cuentas de jugadas, ganadas y
+mejor racha, y arriba los retos que has creado tú, esos con datos vivos del
+servidor (cuántos lo han intentado y cuántos lo sacaron).
+
+Dos cosas que conviene tener claras:
+
+- **Es de este dispositivo, no de esta persona.** No hay cuentas, así que lo
+  jugado en el móvil no aparece en el ordenador. Meter cuentas en un juego
+  familiar cuesta más de lo que da.
+- **Se apunta al terminar, no se lee del servidor.** Una sala caduca a las 12
+  horas y su marcador muere con ella; si no se registra en el momento, se
+  pierde. Por eso cada jugador guarda su propia copia de la ronda.
+
+La identidad de cada entrada incluye el número de ronda (que sale del propio
+marcador de la sala), así que ni el sondeo de un segundo ni recargar con la
+partida terminada la duplican.
 
 ## Idioma de la interfaz
 

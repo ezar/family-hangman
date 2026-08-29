@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { LanguageProvider, useT } from '@/components/LanguageProvider';
 import Logo from '@/components/Logo';
+
 import { ChallengeIcon, GroupIcon, SoloIcon } from '@/components/ModeIcon';
 import OptionsForm from '@/components/OptionsForm';
 import Picker from '@/components/Picker';
@@ -32,6 +34,9 @@ export default function HomePage() {
 function Home({ hydrated }: { hydrated: boolean }) {
   const t = useT();
   const router = useRouter();
+  const hasHistory = useGameStore(
+    (state) => state.history.length > 0 || state.myChallenges.length > 0,
+  );
   const { name, language, difficulty, setName, setLanguage, setDifficulty, rememberIdentity } =
     useGameStore();
 
@@ -236,6 +241,16 @@ function Home({ hydrated }: { hydrated: boolean }) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Un enlace discreto: el inicio es un lanzador, no un panel. */}
+      {panel === 'menu' && hydrated && hasHistory && (
+        <Link
+          href="/historial"
+          className="mx-auto text-sm text-cream/45 underline-offset-4 hover:text-cream/80 hover:underline"
+        >
+          {t.myHistory}
+        </Link>
+      )}
 
       <ul className="flex items-center justify-center gap-2 text-[0.7rem] text-cream/30">
         {[t.featureNoInstall, t.featureLanguages, t.featureLevels].map((feature) => (

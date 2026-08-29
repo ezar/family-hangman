@@ -15,6 +15,7 @@ import { useGameStore } from '@/lib/gameStore';
 import { useFeedback } from '@/lib/useFeedback';
 import { localizeError } from '@/lib/apiError';
 import { useHydratedStore } from '@/lib/useHydratedStore';
+import { useRecordGame } from '@/lib/useRecordGame';
 import type { PublicChallenge } from '@/lib/challenge';
 import type { PublicGame } from '@/lib/types';
 
@@ -38,12 +39,22 @@ function Challenge({ code, hydrated }: { code: string; hydrated: boolean }) {
 
   const [challenge, setChallenge] = useState<PublicChallenge | null>(null);
   const [game, setGame] = useState<PublicGame | null>(null);
+  // El tablero se puede cerrar sin perder la partida: al terminar se vuelve a
+  // la portada, que es donde esta la tabla.
+  const [showBoard, setShowBoard] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const feedback = useFeedback();
 
   const attemptId = hydrated ? (attempts[code] ?? null) : null;
   const mine = hydrated && myChallenges.includes(code);
+
+  // Un intento es unico, asi que sirve de identidad de la ronda.
+  useRecordGame('challenge', code, attemptId ?? 'sin-intento', game, {
+    language,
+    code,
+    author: challenge?.authorName,
+  });
 
   const loadChallenge = useCallback(async () => {
     try {
@@ -59,6 +70,34 @@ function Challenge({ code, hydrated }: { code: string; hydrated: boolean }) {
   useEffect(() => {
     loadChallenge();
   }, [loadChallenge]);
+
+  // Si ya habias abierto este reto, recuperamos tu intento: para retomarlo si
+  // quedo a medias, y para ensenarte tu resultado si ya lo terminaste, en vez
+  // de dejarte empezar otro y salir dos veces en la tabla.
+  useEffect(() => {
+    if (!attemptId) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const response = await fetch(
+          `/api/challenge/attempt?code=${encodeURIComponent(code)}&attemptId=${encodeURIComponent(attemptId)}`,
+        );
+        const data = await response.json();
+        if (cancelled || !response.ok) return;
+
+        const previous = data.game as PublicGame;
+        setGame(previous);
+        setShowBoard(previous.status === 'playing');
+      } catch {
+        // Sin intento recuperable se juega como si fuera la primera vez.
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [attemptId, code]);
 
   const play = useCallback(
     async (path: string, body: Record<string, unknown>) => {
@@ -109,6 +148,7 @@ function Challenge({ code, hydrated }: { code: string; hydrated: boolean }) {
       if (!response.ok) throw new Error(localizeError(t, data, t.somethingWrong));
       rememberAttempt(code, data.attemptId);
       setGame(data.game);
+      setShowBoard(true);
     } catch (problem) {
       setError(problem instanceof Error ? problem.message : t.somethingWrong);
     } finally {
@@ -133,8 +173,11 @@ function Challenge({ code, hydrated }: { code: string; hydrated: boolean }) {
     );
   }
 
+  const finishedMine =
+    game && (game.status === 'won' || game.status === 'lost') ? game : null;
+
   // Antes de jugar (o si el reto es mio): la portada con la tabla de resultados.
-  if (!game) {
+  if (!showBoard || !game) {
     return (
       <main className="flex flex-1 flex-col justify-center gap-5 py-8 safe-bottom">
         <Logo />
@@ -153,7 +196,44 @@ function Challenge({ code, hydrated }: { code: string; hydrated: boolean }) {
             {t.wordOfLetters}
           </p>
 
-          {!mine && (
+          {/* Ya lo jugaste: tu resultado, y sin opcion de repetir. */}
+          {!mine && finishedMine && (
+            <div
+              className={`rounded-2xl border px-4 py-3 ${
+                finishedMine.status === 'won'
+                  ? 'border-mint/30 bg-mint/10'
+                  : 'border-coral/30 bg-coral/10'
+              }`}
+            >
+              <p className="label mb-1">{t.alreadyPlayed}</p>
+              <p
+                className={`font-display text-base ${
+                  finishedMine.status === 'won' ? 'text-mint' : 'text-coral'
+                }`}
+              >
+                {finishedMine.status === 'won'
+                  ? t.yourResultWon(finishedMine.wrongCount)
+                  : t.yourResultLost}
+              </p>
+              {finishedMine.word && (
+                <p className="mt-1 text-xs text-cream/45">
+                  {t.theWordWas}{' '}
+                  <strong className="font-display uppercase tracking-wide text-cream/80">
+                    {finishedMine.word}
+                  </strong>
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* A medias: se retoma donde lo dejaste, no se empieza de cero. */}
+          {!mine && game && game.status === 'playing' && (
+            <button type="button" className="btn-primary w-full" onClick={() => setShowBoard(true)}>
+              {t.resumeGame}
+            </button>
+          )}
+
+          {!mine && !game && (
             <>
               <input
                 className="field text-center"
@@ -244,9 +324,17 @@ function Challenge({ code, hydrated }: { code: string; hydrated: boolean }) {
             <Link href="/reto" className="btn-ghost w-full">
               {t.challengeNowYou}
             </Link>
-            <Link href={`/reto/${code}`} className="text-sm text-cream/40 hover:underline">
+            {/*
+              Un enlace a esta misma pagina no navega a ningun sitio: el cartel
+              no vive en la URL sino en el estado, asi que hay que cerrarlo.
+            */}
+            <button
+              type="button"
+              onClick={() => setShowBoard(false)}
+              className="text-sm text-cream/40 hover:underline"
+            >
               {t.seeChallengeTable}
-            </Link>
+            </button>
           </div>
         }
       />
