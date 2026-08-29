@@ -1,0 +1,98 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    /* Alto real de la ventana en movil, sin el salto de la barra del navegador. */
+    --vh: 100dvh;
+  }
+
+  html,
+  body {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-ink text-cream font-sans antialiased;
+    /* La textura y el degradado viven en el body para que no haya costuras
+       entre pantallas al navegar. */
+    background-image:
+      radial-gradient(120% 80% at 50% -10%, #3a1f4d 0%, transparent 55%),
+      radial-gradient(90% 60% at 100% 100%, #4a2033 0%, transparent 60%),
+      linear-gradient(180deg, #150f1e 0%, #120c1a 100%);
+    background-attachment: fixed;
+    overscroll-behavior: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Nada de zoom accidental al tocar rapido dos veces el teclado. */
+  button {
+    touch-action: manipulation;
+  }
+}
+
+@layer components {
+  /* Superficie base de paneles: cristal calido sobre el fondo oscuro. */
+  .panel {
+    @apply rounded-xl2 border border-white/10 bg-white/[0.04] shadow-panel backdrop-blur-xl;
+  }
+
+  .label {
+    @apply text-[0.7rem] font-bold uppercase tracking-[0.18em] text-cream/45;
+  }
+
+  /* Boton principal: relieve de 4px que se hunde al pulsar, como una tecla. */
+  .btn {
+    @apply relative inline-flex select-none items-center justify-center gap-2 rounded-2xl
+           px-6 py-4 font-display text-lg font-semibold transition-[transform,box-shadow]
+           duration-100 active:translate-y-[3px] active:shadow-key-sm
+           disabled:pointer-events-none disabled:opacity-40;
+  }
+
+  .btn-primary {
+    @apply btn bg-gradient-to-b from-honey to-honey-deep text-ink shadow-key;
+  }
+
+  .btn-ghost {
+    @apply btn border border-white/15 bg-white/[0.06] text-cream shadow-key;
+  }
+
+  .field {
+    @apply w-full rounded-2xl border border-white/10 bg-black/25 px-5 py-4 font-display
+           text-lg text-cream placeholder:text-cream/25 outline-none transition
+           focus:border-honey/60 focus:ring-4 focus:ring-honey/15;
+  }
+}
+
+@layer utilities {
+  .text-shadow-hard {
+    text-shadow: 0 3px 0 rgba(0, 0, 0, 0.35);
+  }
+
+  /* Grano fino: rompe las bandas de los degradados en pantallas grandes. */
+  .grain::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.35;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  }
+
+  .safe-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
