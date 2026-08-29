@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test tests/*.test.mjs"
+    "test": "node --experimental-strip-types --import ./tests/register.mjs --test tests/*.test.mjs"
   },
   "dependencies": {
     "@upstash/redis": "^1.34.3",

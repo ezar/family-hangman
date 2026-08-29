@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import Board from '@/components/Board';
+import CandidateCount from '@/components/CandidateCount';
 import EffectToggles from '@/components/EffectToggles';
 import Logo from '@/components/Logo';
 import PlayersList from '@/components/PlayersList';
@@ -58,7 +59,10 @@ export default function RoomClient({ roomCode }: { roomCode: string }) {
       myTurn: !amSetter && active !== null && active.id === playerId,
       finished: game.status === 'won' || game.status === 'lost',
       hintAvailable:
-        game.status === 'playing' && game.hintsUsed < MAX_HINTS && remainingLives(game) > 1,
+        game.status === 'playing' &&
+        game.wordSource !== 'evil' &&
+        game.hintsUsed < MAX_HINTS &&
+        remainingLives(game) > 1,
       setter: game.players.find((player) => player.id === game.setterId) ?? null,
     };
   }, [game, playerId]);
@@ -164,6 +168,7 @@ export default function RoomClient({ roomCode }: { roomCode: string }) {
             : `Turno de ${view.active?.name ?? '...'}`}
       </motion.p>
       <Scoreboard scores={game.scores} />
+      <CandidateCount count={game.candidatesLeft} />
       {actionError && <p className="text-sm text-coral">{actionError}</p>}
     </div>
   );
@@ -193,7 +198,7 @@ export default function RoomClient({ roomCode }: { roomCode: string }) {
         // Quien pone la palabra mira, no juega.
         disabled={view.amSetter || !view.myTurn || view.finished}
         onGuess={guess}
-        onHint={view.amSetter ? null : hint}
+        onHint={view.amSetter || game.wordSource === 'evil' ? null : hint}
         hintAvailable={view.hintAvailable && view.myTurn}
         reveal={game.status === 'lost' ? game.word : null}
         banner={banner}
@@ -203,6 +208,7 @@ export default function RoomClient({ roomCode }: { roomCode: string }) {
         status={view.finished ? (game.status as 'won' | 'lost') : null}
         word={game.word}
         scores={game.scores}
+        evil={game.wordSource === 'evil'}
         actionLabel="Otra palabra"
         // En palabra propia, la siguiente ronda la abre quien la pone.
         onAction={game.wordSource === 'player' ? undefined : () => restart()}

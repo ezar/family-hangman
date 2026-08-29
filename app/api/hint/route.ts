@@ -13,6 +13,7 @@ const ERRORS: Record<HintError, { message: string; status: number }> = {
   'no-hints-left': { message: 'Ya habéis gastado la pista de esta ronda', status: 409 },
   'last-life': { message: 'Con una sola vida la pista no está disponible', status: 409 },
   'nothing-to-reveal': { message: 'No queda ninguna letra por descubrir', status: 409 },
+  'hints-disabled': { message: 'El tramposo no da pistas', status: 409 },
 };
 
 export async function POST(request: Request) {

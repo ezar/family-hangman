@@ -21,7 +21,7 @@ export default function HomePage() {
     useGameStore();
 
   const [panel, setPanel] = useState<Panel>('menu');
-  const [wordSource, setWordSource] = useState<'list' | 'player'>('list');
+  const [wordSource, setWordSource] = useState<'list' | 'player' | 'evil'>('list');
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState<'create' | 'join' | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -142,10 +142,11 @@ export default function HomePage() {
               options={[
                 { value: 'list', label: 'Al azar', hint: 'la elige el juego' },
                 { value: 'player', label: 'La pongo yo', hint: 'y la adivinan' },
+                { value: 'evil', label: 'Tramposo', hint: 'os esquiva' },
               ]}
             />
 
-            {wordSource === 'list' && (
+            {wordSource !== 'player' && (
               <OptionsForm
                 idPrefix="home"
                 language={language}
@@ -153,6 +154,13 @@ export default function HomePage() {
                 onLanguage={setLanguage}
                 onDifficulty={setDifficulty}
               />
+            )}
+
+            {wordSource === 'evil' && (
+              <p className="rounded-xl border border-grape/30 bg-grape/10 px-4 py-3 text-center text-xs text-grape">
+                No habrá palabra elegida: el juego irá cambiándola para esquivaros mientras
+                pueda. Sin pistas.
+              </p>
             )}
 
             {wordSource === 'player' ? (
