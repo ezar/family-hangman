@@ -15,6 +15,7 @@ import { useGameStore } from '@/lib/gameStore';
 import { useFeedback } from '@/lib/useFeedback';
 import { localizeError } from '@/lib/apiError';
 import { useHydratedStore } from '@/lib/useHydratedStore';
+import { useRecordGame } from '@/lib/useRecordGame';
 import type { PublicChallenge } from '@/lib/challenge';
 import type { PublicGame } from '@/lib/types';
 
@@ -44,6 +45,13 @@ function Challenge({ code, hydrated }: { code: string; hydrated: boolean }) {
 
   const attemptId = hydrated ? (attempts[code] ?? null) : null;
   const mine = hydrated && myChallenges.includes(code);
+
+  // Un intento es unico, asi que sirve de identidad de la ronda.
+  useRecordGame('challenge', code, attemptId ?? 'sin-intento', game, {
+    language,
+    code,
+    author: challenge?.authorName,
+  });
 
   const loadChallenge = useCallback(async () => {
     try {
@@ -244,9 +252,17 @@ function Challenge({ code, hydrated }: { code: string; hydrated: boolean }) {
             <Link href="/reto" className="btn-ghost w-full">
               {t.challengeNowYou}
             </Link>
-            <Link href={`/reto/${code}`} className="text-sm text-cream/40 hover:underline">
+            {/*
+              Un enlace a esta misma pagina no navega a ningun sitio: el cartel
+              no vive en la URL sino en el estado, asi que hay que cerrarlo.
+            */}
+            <button
+              type="button"
+              onClick={() => setGame(null)}
+              className="text-sm text-cream/40 hover:underline"
+            >
               {t.seeChallengeTable}
-            </Link>
+            </button>
           </div>
         }
       />

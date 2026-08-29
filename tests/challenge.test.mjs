@@ -10,6 +10,9 @@ const {
   summarize,
   rankResults,
   CHALLENGE_LIVES,
+  summarizeChallenge,
+  parseCodes,
+  MAX_OWN_CHALLENGES,
 } = await import('../lib/challenge.ts');
 const { applyGuess, LIVES_BY_DIFFICULTY } = await import('../lib/gameLogic.ts');
 
@@ -89,4 +92,35 @@ test('ordenar no altera la lista original', () => {
   ];
   rankResults(results);
   assert.deepEqual(results.map((r) => r.name), ['Z', 'A']);
+});
+
+test('el resumen de un reto cuenta intentos y aciertos', () => {
+  const results = [
+    { name: 'A', status: 'won', wrongCount: 1, maxWrong: 6, tries: 6, at: 1 },
+    { name: 'B', status: 'lost', wrongCount: 6, maxWrong: 6, tries: 9, at: 2 },
+    { name: 'C', status: 'won', wrongCount: 0, maxWrong: 6, tries: 5, at: 3 },
+  ];
+  const summary = summarizeChallenge(challenge, results);
+  assert.equal(summary.code, 'AB12CD');
+  assert.equal(summary.wordLength, 9, 'la longitud, nunca la palabra');
+  assert.equal(summary.tried, 3);
+  assert.equal(summary.solved, 2);
+  assert.equal(JSON.stringify(summary).includes('cocodrilo'), false);
+});
+
+test('un reto sin intentos resume en ceros', () => {
+  const summary = summarizeChallenge(challenge, []);
+  assert.equal(summary.tried, 0);
+  assert.equal(summary.solved, 0);
+});
+
+test('los codigos de la lista se limpian, deduplican y acotan', () => {
+  assert.deepEqual(parseCodes('ab12cd,EF34GH'), ['AB12CD', 'EF34GH']);
+  assert.deepEqual(parseCodes('AB12CD,AB12CD'), ['AB12CD'], 'sin repetidos');
+  assert.deepEqual(parseCodes('AB12CD,no!,x'), ['AB12CD'], 'descarta los inválidos');
+  assert.deepEqual(parseCodes(''), []);
+  assert.deepEqual(parseCodes(null), []);
+
+  const muchos = Array.from({ length: 40 }, (_, i) => `AB12C${i.toString(36)}`).join(',');
+  assert.equal(parseCodes(muchos).length, MAX_OWN_CHALLENGES, 'acotado para no pedir de más');
 });

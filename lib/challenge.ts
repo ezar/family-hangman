@@ -23,6 +23,42 @@ export interface AttemptResult {
   at: number;
 }
 
+/** Una linea de la lista "mis retos": lo justo para decidir cual abrir. */
+export interface ChallengeSummary {
+  code: string;
+  wordLength: number;
+  /** Cuantas personas lo han intentado y cuantas lo sacaron. */
+  tried: number;
+  solved: number;
+  createdAt: number;
+}
+
+/** Cuantos retos propios se recuerdan y se pueden consultar de una vez. */
+export const MAX_OWN_CHALLENGES = 20;
+
+export function summarizeChallenge(
+  challenge: Challenge,
+  results: AttemptResult[],
+): ChallengeSummary {
+  return {
+    code: challenge.code,
+    wordLength: challenge.word.length,
+    tried: results.length,
+    solved: results.filter((result) => result.status === 'won').length,
+    createdAt: challenge.createdAt,
+  };
+}
+
+/** Los codigos que llegan por la URL: separados por comas y acotados. */
+export function parseCodes(input: unknown): string[] {
+  if (typeof input !== 'string') return [];
+  const codes = input
+    .split(',')
+    .map((code) => normalizeChallengeCode(code))
+    .filter((code): code is string => code !== null);
+  return [...new Set(codes)].slice(0, MAX_OWN_CHALLENGES);
+}
+
 /** El reto tal como lo ve quien lo abre: nunca incluye la palabra. */
 export interface PublicChallenge {
   code: string;

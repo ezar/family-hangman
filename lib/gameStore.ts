@@ -2,6 +2,8 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { MAX_OWN_CHALLENGES } from './challenge';
+import { addEntry, type HistoryEntry } from './history';
 import type { Difficulty, Language } from './types';
 
 interface RoomIdentity {
@@ -24,6 +26,8 @@ interface GameState {
   attempts: Record<string, string>;
   /** Retos que he creado yo, para volver a ver quien ha picado. */
   myChallenges: string[];
+  /** Partidas terminadas en este dispositivo, de la mas reciente a la mas vieja. */
+  history: HistoryEntry[];
   setName: (name: string) => void;
   setLanguage: (language: Language) => void;
   setDifficulty: (difficulty: Difficulty) => void;
@@ -32,6 +36,9 @@ interface GameState {
   toggleVibration: () => void;
   rememberAttempt: (code: string, attemptId: string) => void;
   rememberChallenge: (code: string) => void;
+  forgetChallenges: (codes: string[]) => void;
+  recordGame: (entry: HistoryEntry) => void;
+  clearHistory: () => void;
   playerIdFor: (roomCode: string) => number | null;
 }
 
@@ -46,6 +53,7 @@ export const useGameStore = create<GameState>()(
       vibration: true,
       attempts: {},
       myChallenges: [],
+      history: [],
       setName: (name) => set({ name }),
       setLanguage: (language) => set({ language }),
       setDifficulty: (difficulty) => set({ difficulty }),
@@ -57,7 +65,18 @@ export const useGameStore = create<GameState>()(
         set((state) => ({ attempts: { ...state.attempts, [code]: attemptId } })),
       rememberChallenge: (code) =>
         set((state) => ({
-          myChallenges: [code, ...state.myChallenges.filter((c) => c !== code)].slice(0, 20),
+          myChallenges: [code, ...state.myChallenges.filter((c) => c !== code)].slice(
+            0,
+            MAX_OWN_CHALLENGES,
+          ),
+        })),
+      recordGame: (entry) => set((state) => ({ history: addEntry(state.history, entry) })),
+      clearHistory: () => set({ history: [] }),
+      // Los retos caducan a los siete dias: cuando el servidor ya no los
+      // conoce, se quitan de la lista para que no queden enlaces muertos.
+      forgetChallenges: (codes) =>
+        set((state) => ({
+          myChallenges: state.myChallenges.filter((code) => !codes.includes(code)),
         })),
       playerIdFor: (roomCode) => get().identities[roomCode] ?? null,
     }),

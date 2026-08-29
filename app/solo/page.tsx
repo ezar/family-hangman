@@ -23,6 +23,7 @@ import {
 import { useGameStore } from '@/lib/gameStore';
 import { useFeedback } from '@/lib/useFeedback';
 import { useHydratedStore } from '@/lib/useHydratedStore';
+import { useRecordGame } from '@/lib/useRecordGame';
 import { randomWord, wordCount, wordList } from '@/lib/words';
 import type { Game, Scores } from '@/lib/types';
 
@@ -110,6 +111,19 @@ function Solo({ hydrated }: { hydrated: boolean }) {
       return result.game;
     });
   }, [feedback]);
+
+  // El numero de ronda sale del marcador, asi que recargar no duplica nada.
+  useRecordGame(
+    'solo',
+    `${game?.language ?? 'es'}-${game?.difficulty ?? 'familiar'}`,
+    game ? game.scores.wins + game.scores.losses : 0,
+    game,
+    {
+      language: game?.language ?? 'es',
+      difficulty: game?.difficulty,
+      evil: game?.wordSource === 'evil',
+    },
+  );
 
   const view = useMemo(() => {
     if (!game) return null;
