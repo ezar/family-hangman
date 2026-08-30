@@ -16,6 +16,8 @@ export async function POST(request: Request) {
   }
 
   const language = isLanguage(body.language) ? body.language : 'es';
+  // El idioma de la palabra lo elige quien la escribe; por defecto, el suyo.
+  const wordLanguage = isLanguage(body.wordLanguage) ? body.wordLanguage : language;
   const authorName = cleanName(body.name, messagesFor(language).someone);
 
   try {
@@ -25,9 +27,14 @@ export async function POST(request: Request) {
         word,
         authorName,
         createdAt: Date.now(),
+        language: wordLanguage,
       };
       if (await createChallengeIfAbsent(challenge)) {
-        return NextResponse.json({ code: challenge.code, wordLength: word.length });
+        return NextResponse.json({
+          code: challenge.code,
+          wordLength: word.length,
+          language: wordLanguage,
+        });
       }
     }
     return jsonError('No se pudo generar un código libre, inténtalo otra vez', 503);

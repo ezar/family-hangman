@@ -1,4 +1,4 @@
-import type { Game } from './types';
+import type { Game, Language } from './types';
 
 /**
  * Un reto es una palabra que alguien escribe y reparte por enlace. A
@@ -10,6 +10,13 @@ export interface Challenge {
   word: string;
   authorName: string;
   createdAt: number;
+  /**
+   * En que idioma esta la palabra. No es lo mismo que el idioma de la
+   * pantalla: la interfaz la lees en el tuyo, pero necesitas saber en cual
+   * pensar para adivinar. Opcional porque los retos creados antes de que
+   * existiera este campo siguen vivos hasta siete dias.
+   */
+  language?: Language;
 }
 
 /** Lo que deja cada persona que lo intenta, para la tabla del autor. */
@@ -27,6 +34,7 @@ export interface AttemptResult {
 export interface ChallengeSummary {
   code: string;
   wordLength: number;
+  language?: Language;
   /** Cuantas personas lo han intentado y cuantas lo sacaron. */
   tried: number;
   solved: number;
@@ -43,6 +51,7 @@ export function summarizeChallenge(
   return {
     code: challenge.code,
     wordLength: challenge.word.length,
+    language: challenge.language,
     tried: results.length,
     solved: results.filter((result) => result.status === 'won').length,
     createdAt: challenge.createdAt,
@@ -79,6 +88,8 @@ export interface PublicChallenge {
   code: string;
   authorName: string;
   wordLength: number;
+  /** El idioma de la palabra si el reto lo trae; los antiguos no lo tienen. */
+  language?: Language;
   results: AttemptResult[];
 }
 

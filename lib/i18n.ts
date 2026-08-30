@@ -133,14 +133,17 @@ const es = {
   whoChallenges: '¿Quién reta?',
   createChallenge: 'Crear el reto',
   challengeReady: 'Reto listo',
-  challengeReadyHint: (letters: number): string =>
-    `Tu palabra tiene ${letters} letras. Pásale el enlace a quien quieras: no hace falta que esté conectado ahora, ni que se instale nada.`,
+  challengeReadyHint: (letters: number, language: string): string =>
+    `Tu palabra tiene ${letters} letras y está ${language}. Pásale el enlace a quien quieras: no hace falta que esté conectado ahora, ni que se instale nada.`,
   shareChallenge: 'Compartir el reto',
   seeWhoTried: 'Ver quién lo ha intentado',
   yourChallenge: 'Tu reto',
   challengesYou: (name: string): string => `${name} te reta`,
-  wordOfLetters: 'letras.',
+  wordOfLetters: 'letras',
   aWordOf: 'Una palabra de',
+  /** El idioma de la palabra, no el de la pantalla. */
+  inLanguage: { es: 'en español', en: 'en inglés' } as Record<'es' | 'en', string>,
+  wordLanguage: 'Idioma de la palabra',
   acceptChallenge: 'Aceptar el reto',
   alreadyPlayed: 'Ya lo jugaste',
   yourResultWon: (mistakes: number): string =>
@@ -183,7 +186,8 @@ const es = {
   loadingChallenge: 'Cargando el reto...',
   theWordOf: (name: string): string => `La palabra de ${name}`,
   youGuessedIt: '¡Lo adivinaste!',
-  challengeText: (letters: number): string => `Te reto: adivina mi palabra de ${letters} letras.`,
+  challengeText: (letters: number, language: string): string =>
+    `Te reto: adivina mi palabra de ${letters} letras ${language}.`,
 
   // Errores que devuelve la API, por codigo
   'error.not-playing': 'La partida no está en juego',
@@ -329,14 +333,16 @@ const en: Messages = {
   whoChallenges: 'Who is challenging?',
   createChallenge: 'Create the challenge',
   challengeReady: 'Challenge ready',
-  challengeReadyHint: (letters: number) =>
-    `Your word has ${letters} letters. Send the link to whoever you like: they do not need to be online now, or install anything.`,
+  challengeReadyHint: (letters, language) =>
+    `Your word has ${letters} letters and is ${language}. Send the link to whoever you like: they do not need to be online now, or install anything.`,
   shareChallenge: 'Share the challenge',
   seeWhoTried: 'See who has tried it',
   yourChallenge: 'Your challenge',
   challengesYou: (name: string) => `${name} challenges you`,
-  wordOfLetters: 'letters.',
+  wordOfLetters: 'letters',
   aWordOf: 'A word of',
+  inLanguage: { es: 'in Spanish', en: 'in English' },
+  wordLanguage: 'Language of the word',
   acceptChallenge: 'Accept the challenge',
   alreadyPlayed: 'You already played it',
   yourResultWon: (mistakes) =>
@@ -374,7 +380,8 @@ const en: Messages = {
   loadingChallenge: 'Loading the challenge...',
   theWordOf: (name: string) => `${name}'s word`,
   youGuessedIt: 'You got it!',
-  challengeText: (letters: number) => `I challenge you: guess my ${letters}-letter word.`,
+  challengeText: (letters, language) =>
+    `I challenge you: guess my ${letters}-letter word ${language}.`,
 
   'error.not-playing': 'The game is not running',
   'error.not-your-turn': 'It is not your turn',

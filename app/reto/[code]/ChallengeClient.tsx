@@ -194,6 +194,14 @@ function Challenge({ code, hydrated }: { code: string; hydrated: boolean }) {
             {t.aWordOf}{' '}
             <strong className="font-display text-lg text-honey">{challenge.wordLength}</strong>{' '}
             {t.wordOfLetters}
+            {/* Los retos antiguos no lo traen: mejor callar que adivinar mal. */}
+            {challenge.language && (
+              <>
+                {' '}
+                <strong className="text-cream/80">{t.inLanguage[challenge.language]}</strong>
+              </>
+            )}
+            .
           </p>
 
           {/* Ya lo jugaste: tu resultado, y sin opcion de repetir. */}
@@ -251,7 +259,10 @@ function Challenge({ code, hydrated }: { code: string; hydrated: boolean }) {
           {mine && (
             <ShareLink
               path={`/reto/${code}`}
-              text={t.challengeText(challenge.wordLength)}
+              text={t.challengeText(
+                challenge.wordLength,
+                challenge.language ? t.inLanguage[challenge.language] : '',
+              )}
               label={t.shareAgain}
             />
           )}

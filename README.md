@@ -183,7 +183,18 @@ Qué idioma habla cada pantalla:
 |----------|--------|
 | Inicio y modo solo | el que tenga elegido quien juega |
 | Sala | el de la partida: lo fija quien la creó, y todos leen lo mismo |
-| Reto por enlace | el de quien mira; un reto no tiene idioma propio, porque la palabra la escribe una persona |
+| Reto por enlace | el de quien mira |
+
+Un reto es el caso raro: la **interfaz** la lees en tu idioma, pero la
+**palabra** puede estar en otro, porque la escribe una persona. Son dos cosas
+distintas y se tratan por separado: quien crea el reto elige el idioma de la
+palabra, y a quien lo recibe se le dice —en su idioma— en cuál tiene que
+pensar. Sin eso, recibir `lighthouse` cuando esperabas castellano es un
+enigma innecesario.
+
+Los retos creados antes de que existiera ese campo siguen vivos hasta siete
+días y no lo traen: en ese caso no se dice nada, que es mejor que arriesgar y
+mandar a alguien a pensar en el idioma equivocado.
 
 Los errores de la API viajan con un código además del texto. El servidor no
 sabe en qué idioma está mirando quien recibe la respuesta, así que el cliente

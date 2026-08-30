@@ -146,3 +146,16 @@ test('un contador de vistos desfasado no da negativos', () => {
 test('sin retos no hay nada nuevo que avisar', () => {
   assert.equal(newAttempts([], { AAA111: 3 }), 0);
 });
+
+test('el resumen lleva el idioma de la palabra', () => {
+  const enIngles = { ...challenge, language: 'en' };
+  assert.equal(summarizeChallenge(enIngles, []).language, 'en');
+});
+
+test('un reto antiguo sin idioma no se lo inventa', () => {
+  // Los creados antes de que existiera el campo siguen vivos siete dias:
+  // callar es mejor que decirle a alguien que piense en el idioma equivocado.
+  const summary = summarizeChallenge(challenge, []);
+  assert.equal(summary.language, undefined);
+  assert.equal('language' in summary, true, 'la clave existe, pero vacía');
+});
