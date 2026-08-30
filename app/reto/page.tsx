@@ -5,11 +5,13 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { LanguageProvider, useLanguage, useT } from '@/components/LanguageProvider';
 import Logo from '@/components/Logo';
+import Picker from '@/components/Picker';
 import ShareLink from '@/components/ShareLink';
 import WordInput from '@/components/WordInput';
 import { useGameStore } from '@/lib/gameStore';
 import { localizeError } from '@/lib/apiError';
 import { useHydratedStore } from '@/lib/useHydratedStore';
+import type { Language } from '@/lib/types';
 
 /**
  * Crear un reto: escribes una palabra y te llevas un enlace. No hay sala ni
@@ -30,7 +32,13 @@ function NewChallenge({ hydrated }: { hydrated: boolean }) {
   const t = useT();
   const language = useLanguage();
   const { name, setName, rememberChallenge } = useGameStore();
-  const [created, setCreated] = useState<{ code: string; wordLength: number } | null>(null);
+  const [created, setCreated] = useState<{
+    code: string;
+    wordLength: number;
+    language: Language;
+  } | null>(null);
+  // El idioma de la palabra, que no tiene por que ser el de la pantalla.
+  const [wordLanguage, setWordLanguage] = useState<Language>(language);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,12 +49,12 @@ function NewChallenge({ hydrated }: { hydrated: boolean }) {
       const response = await fetch('/api/challenge/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ word, name, language }),
+        body: JSON.stringify({ word, name, language, wordLanguage }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(localizeError(t, data, t.somethingWrong));
       rememberChallenge(data.code);
-      setCreated({ code: data.code, wordLength: data.wordLength });
+      setCreated({ code: data.code, wordLength: data.wordLength, language: data.language });
     } catch (problem) {
       setError(problem instanceof Error ? problem.message : t.somethingWrong);
     } finally {
@@ -65,11 +73,13 @@ function NewChallenge({ hydrated }: { hydrated: boolean }) {
         >
           <div className="text-5xl">🎯</div>
           <p className="font-display text-2xl">{t.challengeReady}</p>
-          <p className="text-sm text-cream/50">{t.challengeReadyHint(created.wordLength)}</p>
+          <p className="text-sm text-cream/50">
+            {t.challengeReadyHint(created.wordLength, t.inLanguage[created.language])}
+          </p>
 
           <ShareLink
             path={`/reto/${created.code}`}
-            text={t.challengeText(created.wordLength)}
+            text={t.challengeText(created.wordLength, t.inLanguage[created.language])}
             label={t.shareChallenge}
           />
 
@@ -110,6 +120,18 @@ function NewChallenge({ hydrated }: { hydrated: boolean }) {
             onChange={(event) => setName(event.target.value)}
           />
         </div>
+
+        {/* Quien recibe el enlace no sabe en que idioma pensar si no se le dice. */}
+        <Picker
+          label={t.wordLanguage}
+          layoutId="challenge-word-language"
+          value={wordLanguage}
+          onChange={setWordLanguage}
+          options={[
+            { value: 'es', label: t.spanish },
+            { value: 'en', label: t.english },
+          ]}
+        />
 
         <WordInput
           label={t.wordToGuess}

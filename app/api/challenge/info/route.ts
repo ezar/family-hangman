@@ -18,6 +18,7 @@ export async function GET(request: Request) {
       code: challenge.code,
       authorName: challenge.authorName,
       wordLength: challenge.word.length,
+      language: challenge.language,
       results: rankResults(await readResults(code)),
     };
     return NextResponse.json({ challenge: info });

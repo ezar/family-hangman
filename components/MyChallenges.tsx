@@ -31,8 +31,9 @@ export default function MyChallenges({ challenges }: { challenges: ChallengeSumm
               <span className="font-display text-base font-bold tracking-[0.15em] text-honey">
                 {challenge.code}
               </span>
-              <span className="flex-1 text-xs text-cream/40">
+              <span className="flex-1 truncate text-xs text-cream/40">
                 {t.lettersCount(challenge.wordLength)}
+                {challenge.language ? ` · ${t.inLanguage[challenge.language]}` : ''}
               </span>
               <span className="text-xs text-cream/60">
                 {challenge.tried === 0
